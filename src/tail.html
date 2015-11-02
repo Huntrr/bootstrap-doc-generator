@@ -1,0 +1,36 @@
+    </div>
+
+
+  <hr>
+
+  <footer>
+    <p>
+      &copy; <a href="http://dp.seas.upenn.edu/">Dining Philosophers</a> 2016.
+      Page created by <a href="http://hunterlightman.com/">Hunter Lightman</a>.
+      Workshops designed by the <a href="http://dinphil.github.io/">H&amp;L team.</a>
+    </p>
+  </footer>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="js/jquery-1.11.3.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        $('body').scrollspy({
+          target: '.docs-sidebar',
+          offset: 10
+        });
+
+        $("#sidebar").affix({
+          offset: {
+            top: $('#jumbo').height() + $('#topnav').height()
+          }
+        });
+      });
+    </script>
+
+    <script src="js/prism.js"></script>
+  </body>
+</html>

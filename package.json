@@ -1,0 +1,13 @@
+{
+  "name": "code-weekend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Generates an html file for the code weekend site",
+  "main": "run.js",
+  "author": "Hunter Lightman",
+  "license": "MIT",
+  "dependencies": {
+    "marked": "^0.3.5",
+    "underscore": "^1.8.3"
+  }
+}

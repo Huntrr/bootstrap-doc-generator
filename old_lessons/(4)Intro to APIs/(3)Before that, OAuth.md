@@ -1,0 +1,5 @@
+OAuth is what makes interacting with other APIs secure. It allows us to sign into spammygames.com using our Facebook login, without compromising our Facebook credentials - first, spammygames has us log in on Facebook.com. Then, Facebook then sends back a token to spammygames.com asking it to verify that it is a valid Facebook developer; spammygames sends back its credentials to  Facebook. On seeing that both the user and the website have valid credentials, Facebook now sends back an access token that the website can use to access this particular user's data. This is often called 2-legged OAuth, since there are two steps to it.
+
+![OAuth](assets/img/ws3.jpg)
+
+For the Venmo API to work, it's important to get these keys. You'll have to go to the [Venmo Developer Console](https://venmo.com/account/settings/developers) and create a new app. Then you should be able to get your 'Secret' and 'ID' that you should add into your code as shown a little below. Also make sure to set your web redirect url to 'http://localhost:3000/venmo/oauth'. Time to get to some real code.
