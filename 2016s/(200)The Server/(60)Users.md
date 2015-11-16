@@ -1,0 +1,1 @@
+Intro to closure/objects/modules by creating the using object and user dictionary

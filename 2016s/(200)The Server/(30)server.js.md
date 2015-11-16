@@ -1,0 +1,1 @@
+Set up basic io and socket implementation. Just EMIT a PING and handle a PONG.
