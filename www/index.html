@@ -350,23 +350,733 @@ console.log(myDetails.interests[1]); // prints &#39;Javascript&#39; (array posit
 </code></pre>
 <p>So much better isn&#39;t it! JSON is way more readable and saves you the trouble of having to close every tag you open. Now imagine this on the scale of thousands of search results. JSON makes your life much easier, and websites much faster.</p>
 <p>And that covers the basics of HTML, CSS and JavaScript. Naturally, there&#39;s a lot more we could go into depth about for each of them, but we&#39;ve found that it&#39;s best to learn by experimenting and trying out things on your own, using the resources listed at the start of this session. But before we get to that, let&#39;s not forget the pertinent question:</p>
-</div></section><span id="sec-5" class="anchor"></span><section id="" class="group"><div class="page-header"><h2>Workshop 3, The Server</h2></div><span id="sec-5-1" class="anchor"></span><div id="" class="subgroup"><h3>Node</h3><p>Placeholder</p>
-</div><span id="sec-5-2" class="anchor"></span><div id="" class="subgroup"><h3>Package.json</h3><p>Placeholder</p>
-</div><span id="sec-5-3" class="anchor"></span><div id="" class="subgroup"><h3>Socket.io</h3><p>Placeholder</p>
-</div><span id="sec-5-4" class="anchor"></span><div id="" class="subgroup"><h3>server.js</h3><p>Set up basic io and socket implementation. Just EMIT a PING and handle a PONG.</p>
-</div><span id="sec-5-5" class="anchor"></span><div id="" class="subgroup"><h3>socket-client.js</h3><p>Show adding some new libraries on the client. Implement a ping handler.</p>
-</div><span id="sec-5-6" class="anchor"></span><div id="" class="subgroup"><h3>Functions</h3><p>Intro to function by laying groundwork for user objects.</p>
-<p>Also showcases npm modules (Moniker for simple, Underscore for complicated)</p>
-</div><span id="sec-5-7" class="anchor"></span><div id="" class="subgroup"><h3>Users</h3><p>Intro to closure/objects/modules by creating the using object and user dictionary</p>
-</div><span id="sec-5-8" class="anchor"></span><div id="" class="subgroup"><h3>The socket handler</h3><p>Add some events to the socket handler</p>
-<p>Handle: STATE, JOINED, LEFT</p>
-<h2 id="on-the-client">On the client</h2>
-<p>Then do the same thing on the client.</p>
-</div><span id="sec-5-9" class="anchor"></span><div id="" class="subgroup"><h3>Chat</h3><p>Handle MESG</p>
-<h2 id="on-the-client">On the client</h2>
-<p>Handle MESG on client.</p>
-<h2 id="changing-names">Changing names</h2>
-<p>Handle <code>NAME</code>.</p>
+</div></section><span id="sec-5" class="anchor"></span><section id="" class="group"><div class="page-header"><h2>Workshop 3, The Server</h2></div><span id="sec-5-1" class="anchor"></span><div id="" class="subgroup"><h3>Node</h3><p>Node.js is, at its core, an environment for using Javascript to program web
+servers. Because some people like Javascript, and because we all think PHP
+sucks, the Internet in general seems to think Node is pretty cool. So, while we
+could feasibly use <a href="https://golang.org/">any</a> <a href="https://secure.php.net/">number</a>
+of <a href="https://www.python.org/">different</a> <a href="https://www.java.com/en/">languages</a> to
+make the back-end of our chat client, today the focus will be on Node.</p>
+<p><img src="http://cdn.meme.am/instances/58571095.jpg" alt="... Some people like node"></p>
+<p>Again, some of us seem to think its cool. Hopefully, by the end of this, you&#39;ll
+see why.</p>
+<p>First things first, let&#39;s install Node. Instructions for installing depend on
+your operating system, so keep scrolling until you find the right directions.</p>
+<h4 id="mac">Mac</h4>
+<p>The easiest way to install Node is through Homebrew, a package manage for OSX.
+Sometimes Homebrew is already installed on your computer, and sometimes you need
+to install it. Bring up a terminal window and type <code>brew install node</code>. When it
+finishes, it might show you a few commands you need to run in Terminal. Run
+those commands and you&#39;re set!</p>
+<p>If instead of that command terminal got angry and said it doesn&#39;t know what
+<code>brew</code> is, it means you don&#39;t have Homebrew. No worried. Let&#39;s install Homebrew
+by typing this into terminal:</p>
+<p><code>ruby -e &quot;$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)&quot;</code></p>
+<p>If Homebrew installs successfully, try <code>brew install node</code> again. If that still
+doesn&#39;t work, try Googling the error text and looking for solutions. If that
+doesn&#39;t work, look around and ask a mentor to help.</p>
+<p>If Homebrew is causing too many problems then just try the installer
+<a href="https://nodejs.org/download/">here</a>. You can also install NodeJS using Fink
+(<code>fink install nodejs</code>) or MacPorts(<code>port install nodejs</code>).</p>
+<h4 id="windows">Windows</h4>
+<p>It&#39;s easy to get Node.js set up with a Windows machine:</p>
+<ol>
+<li><p>Download the .msi file from <a href="http://nodejs.org/download/">here</a></p>
+</li>
+<li><p>Use the Windows installer to get it set up.</p>
+</li>
+</ol>
+<h4 id="linux">Linux</h4>
+<p>There are about a million different ways to install things on various
+Linux-based operating systems. Go to <a href="https://github.com/joyent/node/wiki/installing-node.js-via-package-manager">this
+link</a>
+for a full list.</p>
+<p>All set? Let&#39;s get started.</p>
+<h3 id="what-does-server-side-really-mean-">What does server-side really mean?</h3>
+<p>Till now, we&#39;ve dealt with HTML, CSS and JavaScript. These are the files that
+a server send over the internet to your browser when your browser tries to
+navigate to that website. However, as we saw in the last workshop, these files
+aren&#39;t intelligent, they simply display information that is entered into them.</p>
+<p>So real webapps (anything more complicated than a personal landing page) have
+servers that use some boilerplate <em>static files</em> (i.e. HTML, CSS and JavaScript)
+and do their own logic to fill them in with real, intelligent information (the
+difference between a recipe that you can write down once - you can make it as
+fancy as you want but it&#39;s static and won&#39;t change - and something that displays
+the weight of the person eating all that food in real time - dynamic, because
+this would change depending on who the person was and when they check this).
+These servers can be written in many languages, right from C to Java to Python
+or even Assembly language if you wanted to. In this workshop, we’re going to use
+NodeJS, that allows us to use JavaScript to write our server-side code, even
+though JavaScript was initially designed to run only inside the web browser and
+not on servers.</p>
+<p>We usually have servers to do the thinking, databases to store the information
+and static files to display this information in the user’s web browser. These de
+is a very common JavaScript-based web framework. Node is a framework that lets
+us write our own servers in JavaScript to run on our machines. Node is great
+because it has modules, which are bits of code other people have already written
+that can easily be added to give new functionality to your app. NodeJS has the
+most modules of most modern web frameworks, 3 parts come together to form the
+core of any website. Often, websites also use APIs (basically a way for websites
+to talk to each other) to make their websites more dynamic, or to pull in
+information from other websites.</p>
+<h3 id="what-is-a-nodejs-app-">What is a NodeJS app?</h3>
+<p>Node is a very common JavaScript-based web framework. Node is a framework that
+lets us write our own servers in JavaScript to run on our machines. Node is
+great because it has modules, which are bits of code other people have already
+written that can easily be added to give new functionality to your app. NodeJS
+has the most <em>modules</em> of most modern web frameworks, and that’s part of what
+makes it really great for writing webapps fast.</p>
+<p>Now that you know a bit about Node, let&#39;s jump in and explore the different
+components of our Node app.</p>
+</div><span id="sec-5-2" class="anchor"></span><div id="" class="subgroup"><h3>Package.json</h3><p>The first bit of the Node app is purely logisitcal. A <code>package.json</code> is
+a standardized JSON file containing all the pertinent information about this
+app. It&#39;s fairly readable and contains information about the authors, app
+version, and versions of Node modules used.</p>
+<p>For this bit, you&#39;ll want to hop into the <code>server</code> folder in your main project
+directory, and create a <code>package.json</code>. Yours should look something like this</p>
+<pre><code class="lang-json">{
+  &quot;name&quot;: &quot;chat-server&quot;, // module name
+  &quot;private&quot;: true, // keeps this app private
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;description&quot;: &quot;A chat server built for Code Weekend Spring 2016&quot;,
+  &quot;main&quot;: &quot;server.js&quot;,
+  &quot;dependencies&quot;: {
+    &quot;express&quot;: &quot;^4.13.3&quot;,
+    &quot;giphy-api&quot;: &quot;^1.1.11&quot;,
+    &quot;moniker&quot;: &quot;^0.1.2&quot;,
+    &quot;socket.io&quot;: &quot;^1.3.7&quot;,
+    &quot;underscore&quot;: &quot;^1.8.3&quot;
+  }
+}
+</code></pre>
+<p>You&#39;ll notice a couple important things here. Chiefly, you&#39;ll see that list of
+<code>dependencies</code>. That list specifies all the different external node modules
+we&#39;ll be relying on in our app. We have 5 dependencies here, since we&#39;re going
+to, when everything is all set and done, use 5 external packages.</p>
+<p>When you&#39;re done making that file, open up a terminal window, navigate to the
+<code>server</code> folder and type <code>npm install</code>. This&#39;ll read your <code>package.json</code> and
+download all the necessary dependencies. You&#39;ll notice you now have a folder
+called <code>node_modules</code>. That&#39;s where Node houses the code for all of these
+dependencies.</p>
+<p>Once that&#39;s all set we&#39;re ready to keep going.</p>
+</div><span id="sec-5-3" class="anchor"></span><div id="" class="subgroup"><h3>Socket.io</h3><p>We&#39;re almost ready to start writing our Node app. Before that, however, a quick
+interjection to introduce <a href="http://socket.io/">Socket.io</a>.</p>
+<p>Socket.io is a widely used Node module for handling <a href="https://en.wikipedia.org/wiki/WebSocket">web
+sockets</a>. The WebSocket protocol is,
+according to Wikipedia, a means of providing full-duplex communication over
+a single TCP connection. For our purposes, it boils down into a set of rules
+that allow web browsers to communicate in real time with web servers over HTTP.</p>
+<p>Many web servers in the real world have the main task of getting HTTP requests
+(the kinds your browser sends whenever you enter an address in your address bar)
+and streaming responses in the form of webpages. Later, in workshop 4, we&#39;ll
+use Express to serve the webpages in our <code>client</code> folder exactly like that. For
+now, though, we can just open our <code>client/index.html</code> file in a browser.</p>
+<p>In the end, the interesting part of our application is going to be how those
+client files communicate with our Node app via these WebSockets.</p>
+<p>Socket.io does some really cool work to abstract the WebSocket protocol. It
+creates a common language that you&#39;ll see in the next few sections for handling
+these real-time connections on both the client and server. The essence of the
+communication is very simple. Using javascript, we can define (1) a set of rules
+for responding to messages, likely creating different rules for differently
+labeled messages, and (2) we can imperatively emit messages from the client
+(called a socket in Socket.io terms) to the server or from the server to any
+particular socket.</p>
+<p>That means this section of the tutorial will focus on two different areas of
+work. In the <code>server</code> folder, we&#39;re going to be building a <code>server.js</code> file that
+we can run using Node. This&#39;ll act as our Socket.io server, handling connections
+and streaming important information like chat messages. In the <code>client/js</code>
+folder, we&#39;ll be building a new <code>.js</code> file, <code>socket-client.js</code>, which will
+handle the client-sided communication with the server.</p>
+<p>If you&#39;ve taken CIS120, or have some similar experience, you might be able to
+use this description to start envisioning how we might implement the model for
+our chat server. If not, don&#39;t worry. Once we start coding everything should
+become more clear.</p>
+</div><span id="sec-5-4" class="anchor"></span><div id="" class="subgroup"><h3>server.js</h3><p>Let&#39;s start with a super simple server set up.</p>
+<p>Head into the <code>server</code> folder and create a <code>server.js</code> file. This will contain
+the bulk of our Node code. To start, enter in this code:</p>
+<pre><code class="lang-javascript">&#39;use strict&#39;; // puts us in strict mode (js in hard mode)
+
+/* This sets up a pure socket-io server.
+ * Later in the guide we upgrade to a full
+ * express server, to serve files as well
+ * as handle websockets */
+let Server = require(&#39;socket.io&#39;);
+let io = Server(3000); //construct a server on port 3000
+console.log(&#39;SocketIO listening on port 3000&#39;);
+
+
+// SOCKET HANDLER FUNCTIONS
+io.on(&#39;connection&#39;, (socket) =&gt; {
+  // on &#39;connection&#39; we need to set some stuff up
+  console.log(&#39;Got a new connection&#39;);
+
+  // -----------------
+  //  SOCKET HANDLERS
+  // -----------------
+  /**
+   * Handles PING
+   * Responds with a PONG
+   */
+  socket.on(&#39;PING&#39;, (data) =&gt; {
+    console.log(&#39;Got a PING&#39;);
+
+    socket.emit(&#39;PONG&#39;); // reply with a PONG
+  });
+});
+</code></pre>
+<p>That&#39;s it! A fully functioning Socket.io server, just like that. Let&#39;s break
+down the code into its component parts.</p>
+<pre><code>&#39;use strict&#39;;
+</code></pre><p>This line isn&#39;t super important. It just signals to Node that we want to use
+Javascript in &#39;strict mode&#39;. For most of what we&#39;re doing, the differences
+between regular js and strict mode js are irrelevant, but it&#39;s generally
+considered good practice to code in strict mode, as it causes Node to throw
+errors more easily and often helps keep code cleaner, more clear, and more
+&#39;strict&#39;.</p>
+<pre><code class="lang-javascript">let Server = require(&#39;socket.io&#39;);
+let io = Server(3000);
+</code></pre>
+<p>A few things of important here. First, <code>let</code>. You haven&#39;t seen this before, but
+you&#39;ll see it a lot in the server side code. Recently, Javascript underwent
+a big revision, called ES6 (or ES2015, depending on who you ask). One such
+change is the addition of the <code>let</code> and <code>const</code> keyword. In ES5 Javascript, the
+only way to initialize a variable was using the <code>var</code> keyword. The <code>var</code> keyword
+worked, but was generally regarded as very clumsy when it came to <a href="http://stackoverflow.com/questions/1047454/what-is-lexical-scope">lexical
+scoping</a>.
+Essentially, programmers were upset with how <code>var</code> sometimes behaved ambiguously
+compared to what they&#39;d expect in other modern languages. The <code>let</code> keyword is,
+in many ways, identical to <code>var</code> (so in this line we&#39;re creating a <code>Server</code> and
+<code>io</code> variables, as if we replaced <code>let</code> with <code>var</code>) but many developers suggest
+using it over <code>var</code> whenever you work in ES6, so that you never run into any of
+the strange quirks inherent in <code>var</code>s behavior. <code>const</code> is a similar keyword,
+except that, as you might expect, it creates an immutable identifier. If you&#39;ve
+taken CIS120, you&#39;re familiar with the power of immutability, so you know why it
+might be helpful to use <code>const</code>s. </p>
+<p>Regardless of the intricacies, the use of <code>let</code> here is mostly just to help
+familiarize you with ES6, since more and more Javascript will get the ES6
+treatment in times to come. It&#39;s not super important to know the differences,
+but I&#39;ll generally try to prefer ES6 idioms to ES5 code whenever possible in
+this <code>server.js</code>. Unfortunately, ES6 isn&#39;t fully adopted yet to many major web
+browsers, so our client code will stay ES5 compliant. I&#39;ll try to note the
+differences whenever possible, but don&#39;t worry about getting too caught up in it
+all. If you get confused, feel free to ask for help. At least some of your
+mentors love talking about ES6, and so they&#39;d be glad to explain what&#39;s going
+on.</p>
+<p>Next, the Node <code>require</code> function. You&#39;ll see a more explicit use of this
+function later, when we implement users, but, for now, just note that <code>require</code>
+is analogous to <code>import</code> in many languages. The <code>require</code> function will try to
+pull in an external module (either another file in your project or, in this
+case, a separate dependency) for use by the current module. In this case, we use
+<code>require</code> to pull in the Socket.io library from our <code>node_modules</code> directory. We
+label that import <code>Server</code>. In this case, socket.io exposes itself as
+a function, so <code>Server</code> is now assigned to a function. In Socket.io, if the main
+function is passed a port number, it will return a running server, and so that&#39;s
+what we do with the second line. We set <code>io</code> to a server running on port <code>3000</code>.</p>
+<p>Finally, the socket code:</p>
+<pre><code class="lang-javascript">io.on(&#39;connection&#39;, (socket) =&gt; {
+  // on &#39;connection&#39; we need to set some stuff up
+  console.log(&#39;Got a new connection&#39;);
+
+  socket.on(&#39;PING&#39;, (data) =&gt; {
+    console.log(&#39;Got a PING&#39;);
+
+    socket.emit(&#39;PONG&#39;); // reply with a PONG
+  });
+});
+</code></pre>
+<p>What&#39;s this do? The <code>.on</code> function is one of the key components to Socket.io. In
+general, it takes the form of <code>.on(message:String, callback:Function)</code>.
+Essentially, this function defines a rule for handling a socket message. When
+the <code>message:String</code> is received, it tells Socket.io, the <code>callback:Function</code>
+should be executed. You&#39;ll notice functions in Javascript are first-class, we
+can pass them as parameters to other functions, just like variables. You&#39;ll also
+notice we&#39;re using the ES6 arrow notation here for our functions. In this case,
+<code>(socket) =&gt; { /* code */ }</code> is very similar to <code>function (socket) { /* code */
+}</code> except it behaves a bit differently wit the <code>this</code> keyword and tends to look
+better for inline anonymous functions.</p>
+<p>Here we tell <code>io</code> (the socket server, remember?) to handle new <code>connection</code>
+messages with this anonymous function that takes the socket (client) as
+a parameter. The body of this function is the bulk of our Node app. It contains
+all the rules for handling individual <code>socket</code>s, as you&#39;ll see soon.</p>
+<p>Right now, the only <code>socket</code> message we handle is <code>PING</code>. We do this by using
+<code>socket.on(&#39;PING&#39;, (data) =&gt; { /* ... */ }</code>. You&#39;ll notice this anonymous
+function has <code>socket.emit(&#39;PONG&#39;);</code>. Essentially, what this does is tell
+Socket.io that, every time a socket sends a <code>PING</code> message, it should respond,
+emitting a <code>PONG</code> response back to the sending socket. By running <code>socket.emit</code>
+we restrict the response to just the socket of interest. If we&#39;d run <code>io.emit</code>
+instead, we would send the message to the entire server.</p>
+<p>That&#39;s our basic server. Now let&#39;s implement the basic client code, and then we
+can come back here and do some more complicated things.</p>
+</div><span id="sec-5-5" class="anchor"></span><div id="" class="subgroup"><h3>socket-client.js</h3><p>Let&#39;s link some more Javascript to our <code>client/index.html</code>. First, at the bottom
+of the <code>&lt;body&gt;</code>, where we currently link to the <code>jquery-client.js</code>, add these
+lines:</p>
+<pre><code class="lang-html">&lt;script src=&quot;https://cdn.socket.io/socket.io-1.3.7.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;http://underscorejs.org/underscore-min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;js/socket-client.js&quot;&gt;&lt;/script&gt;
+</code></pre>
+<p>This markup will link 2 external libraries (Socket.io and Underscore) as well as
+a new local script, <code>js/socket-client.js</code>, where we&#39;ll handle all of our code
+for handling the connection to the server.</p>
+<p>Create <code>client/js/socket-client.js</code> now, and populate it with this code:</p>
+<pre><code class="lang-javascript">&#39;use strict&#39;;
+var socket = io(&#39;http://localhost:3000&#39;);
+
+socket.emit(&#39;PING&#39;);
+
+// ---------------------
+//    SOCKET HANDLERS
+// ---------------------
+socket.on(&#39;PONG&#39;, function (data) {
+  console.log(&#39;Got PONG!&#39;);
+});
+</code></pre>
+<p>What&#39;s it do? <code>var socket = io(&#39;http://localhost:3000&#39;);</code> uses Socket.io to
+connect to a server running on <code>localhost</code> (the current computer) on port 3000.
+That connects to our Node server. <code>socket.emit(&#39;PING&#39;);</code> sends the <code>PING</code>
+message, and, as before, <code>socket.on(&#39;PONG&#39;, function (data) { /* ... */ }</code>
+handles messages of type <code>PONG</code> coming from the server. Super simple, right?!</p>
+<p>Let&#39;s trying running it.</p>
+<p>First, open terminal, and <code>cd</code> to <code>server</code>. Then run <code>node server.js</code>. That&#39;ll
+start the server.</p>
+<p>Now, re-open <code>client/index.html</code> in your web browser. If you open up the
+developer console (right click -&gt; inspect element), you should see &quot;PONG&quot; in the
+console. Try typing <code>socket.emit(&#39;PING&#39;)</code> into the console, you should see
+&quot;PONG&quot; again. Congratulations! You have a working Node application!</p>
+</div><span id="sec-5-6" class="anchor"></span><div id="" class="subgroup"><h3>Functions</h3><p>It&#39;s almost time to write the rest of our chat handlers. First, we need a few
+more methods on the server side to help us in the implementation of our server
+model. This step will focus on those foundational helper methods, the next step
+will showcase creating a Node module (to represent each User) and then, once
+that&#39;s all set up, we&#39;ll be ready to write our socket handler functions.</p>
+<p>First, these helpers. Open up <code>server/server.js</code>.</p>
+<p>At the top of the file, below <code>&#39;use strict&#39;;</code> add this code:</p>
+<pre><code class="lang-javascript">// gets imports
+let Moniker = require(&#39;moniker&#39;);
+let _ = require(&#39;underscore&#39;);
+
+let users = {};
+</code></pre>
+<p>Here, we see more of the <code>require</code> syntax. This time, we&#39;re pulling in a couple
+other libraries. Moniker will help us randomly generate user names (just to
+illustrate how easy it is to use external packages) and Underscore will provide
+some helpful functions for manipulating our data.</p>
+<p>For those CIS120 and up, check out the <a href="http://underscorejs.org/">Underscore
+docs</a>. You&#39;ll notice methods like <code>fold</code> and <code>map</code>.
+You can think of Underscore as a kind of standard library for functional
+programming in Javascript. It&#39;s super common to see in projects because it
+provides the kinds of functional patterns that keep code clean and simple.</p>
+<p>The final line, <code>let users = {};</code> initializes the <code>users</code> dictionary. Once we
+set up our <code>User</code> module/data type, this variable will function as a dictionary
+for our logged in users.</p>
+<p>Next, at the bottom of the file, add this code</p>
+<pre><code class="lang-javascript">// HELPER FUNCTIONS
+/**
+ * Sees if a name is unique
+ * @param name The name to check
+ * @return boolean true if the name is unique
+ */
+function isUniqueName(name) {
+  let names = _.mapObject(users, (user) =&gt; user.getName().toLowerCase());
+  return !_.contains(names, name.toLowerCase());
+}
+
+/**
+ * Gets a unique name using Moniker (showcases basic npm modules)
+ * @return String a unique name
+ */
+function getUniqueName() {
+  let name = Moniker.choose();
+  while(!isUniqueName(name)) {
+    name = Moniker.choose();
+  }
+
+  return name;
+}
+</code></pre>
+<p>These functions are clearly documented, so it&#39;s a good exercise to try to figure
+them out just by careful reading. If you can&#39;t, don&#39;t worry too much. They&#39;re
+mostly just showcasing usages of the <code>Moniker</code> and <code>Underscore</code> libraries that
+we just <code>require</code>d. <code>isUniqueName</code> checks to see if a name is unique. It does
+this in only 2 lines by utilizing some <code>Underscore</code> functions. First we apply
+<code>_.mapObject</code> to the <code>users</code> dictionary. To those familiar, it should look at
+lot like the <code>map</code> function in many other languages. Essentially, it iterates
+through the <code>users</code> dictionary and, for each user, grabs the lower case version
+of their name, putting all of the names into an array of <code>names</code>, before using
+<code>_.contains</code> to check if any of those <code>names</code> equals the <code>name</code> passed to the
+function.</p>
+<p>Next <code>getUniqueName</code> uses <code>Moniker</code> to choose a new name. We see <code>Moniker</code>
+exposes a <code>.choose()</code> function that just grabs a random name, and this function
+grabs random names until a unique one is found.</p>
+<p>If you&#39;re confused, grab a mentor now. Otherwise, we&#39;re going to move back into
+<code>client/js/socket-client.js</code> and add some useful helper functions there as
+well.</p>
+<h4 id="back-to-client-js-socket-client-js-">Back to <code>client/js/socket-client.js</code></h4>
+<p>First, let&#39;s add some code below <code>var socket = io(&#39;http://localhost:3000&#39;);</code>:</p>
+<pre><code class="lang-javascript">// stores user in channel. It&#39;s a dictionary with id as key
+// User objects have these fields
+//   - id     (user id)
+//   - name   (user name)
+//   - string (string representation)
+var users = {};
+
+// stores the client user id
+// hence users[me] or users.me gives the client user
+var me = socket.id;
+</code></pre>
+<p>As before, this sets up the <code>users</code> dictionary, this time on the client. As you
+see, the dictionary will map user <code>id</code>s to user objects. For client reference,
+we assign <code>var me</code> to the <code>socket.id</code>, so that we can simply use <code>user[me]</code> to
+refer to the current user.</p>
+<p>Now head to the bottom of <code>socket-client.js</code> and add this code:</p>
+<pre><code class="lang-javascript">// ---------------
+//     HELPERS
+// ---------------
+
+/**
+ * Showcases functional Javascript (_.fold) and ternary operators
+ * to get a list of the users currently chatting
+ */
+function getUserList() {
+  return _.reduce(users,
+                  function (rest, user) { 
+                    return (rest ? rest + &#39;, &#39; : &#39;&#39;) + user.name;
+                  },
+                  &#39;&#39;
+                 );
+}
+
+/**
+ * Sends a MESG to the server
+ */
+function sendMessage(message) {
+  socket.emit(&#39;MESG&#39;, {message: message});
+}
+</code></pre>
+<p>As before, <code>getUserList</code> uses some familiar <code>Underscore</code>. The <code>_.reduce</code> method
+is analogous to <code>fold</code> in many languages. Here, we <code>reduce</code> or <code>fold</code> on the
+<code>user</code> dictionary to get a string of comma separated usernames.</p>
+<p>In <code>sendMessage</code> we use Socket.io to emit a <code>MESG</code>. You can see here how we add
+an extra parameter to the <code>socket.emit</code>. This lets us send a JSON object with
+our message so the server has some data to handle. In this case, our JSON
+object is very simple: containing only a <code>message</code> field.</p>
+<p>You&#39;ll notice this code hasn&#39;t really done much so far. That&#39;s just because
+we&#39;re simply laying the groundwork for the rest of the code. In the next step,
+we&#39;ll create a User model, showing off Node&#39;s module pattern, and then we&#39;ll be
+ready to add some actual chat functionality!</p>
+</div><span id="sec-5-7" class="anchor"></span><div id="" class="subgroup"><h3>Users</h3><p>So now the <code>client</code> and <code>server</code> both have a <code>users</code> dictionary, but we still
+need to create a user object to populate those dictionary. What better way to do
+that than with a Node module! This section of the workshop should help
+familiarize you with how Node handles external files. If you ever want to create
+bigger projects in Node, this information is a must, as trying to put thousands
+of lines of code into a single file is nothing but a recipe for disaster.</p>
+<p>Enter the module pattern. Node&#39;s answer for compartmentalizing code.</p>
+<p>The way it works is super simple. Every file in Node gets access to
+a <code>module.exports</code> object. Whenever <code>require</code> is called on a file, this
+<code>module.exports</code> object is what&#39;s returned. Consider a simple example. Say we
+make a file called <code>HelloWorld.js</code> in our <code>server</code> directory, and wrote this
+code:</p>
+<pre><code class="lang-javascript">module.exports = () =&gt; { console.log(&#39;Hello World!&#39;); }
+</code></pre>
+<p>Now, if we were to call <code>require(&#39;./HelloWorld&#39;);</code> from our <code>Server.js</code>, it
+would return a function that, when executed, would log &#39;Hello World!&#39; to the
+console. Some sample code might look like:</p>
+<pre><code class="lang-javascript">let funkyFunction = require(&#39;./HelloWorld&#39;);
+funkyFunction(); // prints Hello World!
+</code></pre>
+<p>Got it? Good. Now let&#39;s create an actual module. In the <code>server</code> directory, make
+a <code>user.js</code> file.</p>
+<p>This module&#39;s goal is the export a User object that we can use to represent
+users in the server model. There are many different object patterns in
+Javascript, and we could spend hours just discussing the differences between
+them. Although ES6 exposes a <code>class</code> syntax that Java developers would be
+familiar with, some devs <a href="https://medium.com/javascript-scene/how-to-fix-the-es6-class-keyword-2d42bb3f4caf#.u2m9b66to">really don&#39;t like
+it</a>,
+so we&#39;re going to use something a bit different. Let&#39;s enter this code into
+<code>user.js</code>.</p>
+<pre><code class="lang-javascript">&#39;use strict&#39;
+
+module.exports = function(socket, name) {
+  /**
+   * User object factory
+   */
+  let self = {
+    setName(newName) {
+      name = newName;
+    },
+
+    getName() {
+      return name;
+    },
+
+    getId() {
+      return socket.id;
+    },
+
+    getSocket() {
+      // this is bad code
+      // it&#39;s not properly encapsulated
+      // sorry
+      return socket;
+    },
+
+    toString() {
+      return name + &#39; (id &#39; + self.getId() + &#39;)&#39;;
+    },
+
+    toObj() {
+      return {
+        name: self.getName(),
+        id: self.getId(),
+        string: self.toString()
+      }
+    }
+  };
+
+  return self;
+}
+</code></pre>
+<p>Again drawing on CIS120, this pattern will remind some of you of the object
+pattern used in the OCaml Paint Project. Essentially, we&#39;re exported a <strong>factory
+function</strong> that returns an object literal with a bunch of relevant functions
+stored inside. <code>socket</code> and <code>name</code> get glued to the closure that&#39;s created, and
+the result is a User object factory. If none of that made sense, don&#39;t worry.
+Basically, we&#39;re exporting a function that takes a <code>socket</code> and a <code>name</code> as
+a parameter and returns a <code>User</code> object. Now let&#39;s head back to <code>server.js</code> and
+finish this implementation.</p>
+<p>First, beneath our imports (where we <code>require</code> Moniker and Underscore), add this
+line:</p>
+<pre><code class="lang-javascript">let User = require(&#39;./user&#39;);
+</code></pre>
+<p>Now, we&#39;re able to use <code>User(socket:Socket, name:String)</code> to create a new user
+as needed. Neat!</p>
+<p>We&#39;re almost ready to start implementing the socket handlers. First, let&#39;s
+revise our <code>io.on(&#39;connection&#39;, ...</code> function. I&#39;m going to get rid of the
+<code>PING</code> handler, but you can leave it in if you like.</p>
+<pre><code class="lang-javascript">// SOCKET HANDLER FUNCTIONS
+io.on(&#39;connection&#39;, (socket) =&gt; { 
+  // on &#39;connection&#39; we need to set some stuff up
+  let name = getUniqueName(); // get a unique name
+  let user = User(socket, name); // create a User (showcases the factory)
+  users[socket.id] = user; // adds user to dictionary
+  console.log(`:CONNECTION - ${user.toString()})`);
+
+  // emit the current state to the new user
+  socket.emit(&#39;STATE&#39;, {
+    users: _.mapObject(users, (user) =&gt; user.toObj()), //_ for functional js
+    user: user.getId()
+  });
+
+  // emit the new JOIN for all the other users
+  socket.broadcast.emit(&#39;JOINED&#39;, {user: users[socket.id].toObj()});
+
+  // -----------------
+  //  TODO: SOCKET HANDLERS
+  // -----------------
+
+
+  /** Handles diconnect */
+  socket.on(&#39;disconnect&#39;, () =&gt; {
+    let user = users[socket.id];
+    console.log(`:LEFT - ${user.toString()})`);
+    socket.broadcast.emit(&#39;LEFT&#39;, {user: user.toObj()});
+    delete users[socket.id];
+  });
+});
+</code></pre>
+<p>Alright, that leaves us with a fair amount to tease through before we move on.
+What does this code do?</p>
+<p>The first block adds our new user to the <code>users</code> dictionary.</p>
+<pre><code class="lang-javascript">let name = getUniqueName();
+let user = User(socket, name);
+users[socket.id] = user
+</code></pre>
+<p>These three lines (1) get a random name using our helper from the previous
+section, (2) create a new user using that name and the User model we just
+<code>require</code>d, and (3) adds that <code>user</code> to <code>users</code>, mapping it to the <code>id</code> of the
+<code>socket</code>. Now, <code>users[ID]</code> (where <code>ID</code> is the <code>id</code> of this <code>socket</code>) will always
+reference this user.</p>
+<p>Next, we emit the current state of the server to the user, so that they can
+update their own user list.</p>
+<pre><code class="lang-javascript">socket.emit(&#39;STATE&#39;, {
+  users: _.mapObject(users, (user) =&gt; user.toObj()), //_ for functional js
+  user: user.getId()
+});
+</code></pre>
+<p>This emits a <code>STATE</code> message to the socket (client), containing a JSON object
+that has, (1) a <code>users</code> field containing all the users currently connected and
+(2) a <code>user</code> field containing the <code>id</code> of this connection (so the socket knows
+who it is in the <code>users</code> list). We use <code>_.mapObject</code> again here to translate
+from the server-sided User model to something simpler -- methods and closures
+don&#39;t transfer well over Socket.io, so we need to translate each user object
+into something a bit simpler.</p>
+<p>Next we broadcast the <code>JOINED</code> event to the entire server so everyone else can
+know they have a new chatter</p>
+<pre><code class="lang-javascript">socket.broadcast.emit(&#39;JOINED&#39;, {user: users[socket.id].toObj()});
+</code></pre>
+<p>Finally, we need to add a little additional handler for Socket.io&#39;s built int
+<code>disconnect</code> event. When a user leaves, we must delete their entry in the
+<code>users</code> dictionary to free up their name for someone else.</p>
+<pre><code class="lang-javascript">socket.on(&#39;disconnect&#39;, () =&gt; {
+  let user = users[socket.id];
+  console.log(`:LEFT - ${user.toString()})`);
+  socket.broadcast.emit(&#39;LEFT&#39;, {user: user.toObj()});
+  delete users[socket.id];
+});
+</code></pre>
+<p>This code broadcasts the <code>LEFT</code> event to everyone so they can update their own
+user lists, and then <code>delete</code>s the user from the dictionary.</p>
+<p>With that, we&#39;re ready for the remainder of our chat implementation!</p>
+</div><span id="sec-5-8" class="anchor"></span><div id="" class="subgroup"><h3>The socket handler</h3><p>Let&#39;s start by adding the <code>MESG</code> handler to the <code>server.js</code> file.</p>
+<pre><code class="lang-javascript">// ---------------
+// SOCKET HANDLERS
+// ---------------
+</code></pre>
+<p>Add this code </p>
+<pre><code class="lang-javascript">  // -----------------
+  //  SOCKET HANDLERS
+  // -----------------
+  /**
+   * Handles MESG
+   * When a client tries to speak
+   * Data object contains:
+   *   - message
+   */
+  socket.on(&#39;MESG&#39;, (data) =&gt; {
+    let user = users[socket.id];
+    console.log(`:MESG - &lt;${user.getName()}&gt; ${data.message}`);
+
+    let message = {
+      from: user.getName(),
+      message: data.message
+    };
+
+    io.emit(&#39;MESG&#39;, message); // broadcast the message everywhere
+  });
+</code></pre>
+<p>This handler handles <code>MESG</code> events. We already know from <code>socket-client.js</code> what
+the <code>data</code> for these events should look like. There should be a single <code>message</code>
+field containing the content of the message. Using that, we parse the message,
+constructing a new object with two fields (one <code>from</code> for the name of the user
+who is sending the message and a second <code>message</code> again containing the message
+contents). Then, we <code>io.emit</code> a <code>MESG</code> containing that information back to the
+entire server (remember <code>socket.emit</code> is localized to one client, <code>io.emit</code>
+broadcasts to everyone), telling everyone the message.</p>
+<p>And, with that, our server is done. (I mean, we&#39;ll add some more functionality
+later, but this will finish putting it in a working state). If you have time,
+review the <code>server.js</code> code. If something doesn&#39;t make sense, ask a mentor. When
+you&#39;re all set, it&#39;s time to finish handling the events on the <code>client</code> side.
+Then we&#39;ll almost be done with the basic app.</p>
+<p>* A small side-note, I use ES6 template strings in this code. Regular string
+literals in Javascript can be composed with <code>&#39;</code>s or <code>&quot;</code>s. In ES6 (and hence in
+Node), we get a new method of composing template strings using ``s. One
+template string here looks like:</p>
+<pre><code>`:MESG - &lt;${user.getName()}&gt; ${data.message}`
+</code></pre><p>The <code>${}</code>s tags in the string are parsed as regular Javascript, making template
+strings a super convenient way to intersperse dynamic values in ES6 strings. In
+this instance, I use <code>${user.getName()}</code> and <code>${data.message}</code> to grab these
+values midstring, without needing to concatenate them as you typically would.</p>
+<h4 id="on-the-client">On the client</h4>
+<p>Open back up <code>client/js/socket-client.js</code>. Below <code>var me = socket.id</code>, you&#39;re
+going to want to add this code:</p>
+<pre><code class="lang-javascript">// ---------------------
+//    SOCKET HANDLERS
+// ---------------------
+
+/**
+ * Handles STATE events.
+ * These are fired when the client first connects,
+ * the data object contains:
+ *   - users (list of user objects currently connected)
+ *   - user  (the id of the current client)
+ */
+socket.on(&#39;STATE&#39;, function (data) {
+  users = data.users;
+  me = data.user;
+  console.log(&#39;:STATE - Users in channel: &#39; + getUserList());
+
+  postMessage(infoColor, &#39;Hello! You name is &#39; + users[me].name + &#39;. Currently,&#39;
+              + &#39; these people are chatting: &lt;br&gt;&#39; + getUserList());
+});
+
+/**
+ * Handles JOINED events.
+ * When a new user joins.
+ * Data object contains:
+ *   - user (the user that just joined)
+ */
+socket.on(&#39;JOINED&#39;, function (data) {
+  var user = data.user;
+  users[user.id] = user;
+  console.log(&#39;:JOINED - &#39; + user.string);
+
+  postMessage(infoColor, user.name + &#39; just joined the channel!&#39;);
+});
+
+/**
+ * Handles LEFT events.
+ * Deletes users who leave.
+ * Data object:
+ *   - user (the user that left)
+ */
+socket.on(&#39;LEFT&#39;, function (data) {
+  var user = data.user;
+  console.log(&#39;:LEFT - &#39; + user.string);
+  delete users[user.id];
+
+  postMessage(infoColor, user.name + &#39; just left :(&#39;);
+});
+
+/**
+ * Handles MESG events.
+ * For messages to the client.
+ * Data object:
+ *   - from    (the NAME of the user the message is from)
+ *   - message (the message)
+ */
+socket.on(&#39;MESG&#39;, function (data) {
+  console.log(&#39;:MSG - &lt;&#39; + data.from + &#39;&gt; &#39; + data.message);
+
+  postMessage(messageColor, formatMessage(data.from, data.message));
+});
+</code></pre>
+<p>By this point, the code in these events should look familiar. Read the commented
+documentation and try to reason through how they work.</p>
+<p>You&#39;ll note we use the <code>postMessage</code> function from <code>client/js/jquery-client.js</code>
+often as a means of posting text to the message box <code>&lt;ul&gt;</code>. Otherwise, some of
+these events appear very similar to their server sides counterparts. <code>JOINED</code>
+events should look very familiar to the basic <code>connection</code> events from before;
+we add the user to our <code>users</code> dictionary and alert the user that someone new
+has joined the channel. Likewise <code>LEFT</code> looks very similar to <code>disconnect</code>,
+going so far as to use almost identical <code>delete users[user.id]</code> syntax to
+cleanse the user from our <code>users</code> dictionary.</p>
+<p>Indeed, the only truly new event here is the <code>STATE</code> handler, which, if you
+remember from <code>server.js</code> is called when the client first connects to the
+server. <code>STATE</code> is passed a data object containing a specially formatted list of
+users, which we then print out to tell us who is currently in the channel.</p>
+<p>And that&#39;s it! An entire chat app (almost). If you run the server now (<code>node
+server.js</code> in terminal from the <code>server</code> directory) and open <code>index.html</code> in
+multiple tabs/windows, you should be able to play with the basic functionality.</p>
+<p>Right click on the page, click <code>inspect element</code> and send messages by using the
+browser console: Try entering <code>sendMessage(&#39;Hello World!&#39;)</code>! If everything
+worked, the message should end up on all connected windows.</p>
+<p>Over course, requiring communication via the console does not make for a very
+user friendly chat app. In the next (short) step, we&#39;ll dive back into
+<code>jquery-client.js</code>, make some very small changes to hook our existing UI up to
+this new functionality, and the result will be a fully functional chat client.</p>
+</div><span id="sec-5-9" class="anchor"></span><div id="" class="subgroup"><h3>Chat</h3><p>This is going to be super complicated. Ready?</p>
+<p>Open <code>client/js/jquery-client.js</code>. Delete this line:</p>
+<pre><code class="lang-javascript">postMessage(&#39;black&#39;, formatMessage(&#39;Me&#39;, $(&#39;#message&#39;).val()));
+</code></pre>
+<p>and replace it with this line:</p>
+<pre><code class="lang-javascript">sendMessage($(&#39;#message&#39;).val()); // server messaging
+</code></pre>
+<p>And that&#39;s it. Now, instead of just printing to the message box, submitting
+a new message uses our <code>sendMessage</code> functionality from <code>socket-client.js</code> to
+send a message to the server. That&#39;s it! Cool, right?</p>
+<h4 id="changing-names">Changing names</h4>
+<p>Of course, this chat server is kind of barebones. We&#39;ll use the rest of this
+section and one more section afterwards to make it a bit cooler. First we&#39;ll add
+functionality to change your name (because <code>Moniker</code> names are only so cool) and
+then we&#39;ll hook up to the Giphy API to let people post images and GIFs to the
+chat room. Ready? Let&#39;s go.</p>
 </div></section><span id="sec-6" class="anchor"></span><section id="" class="group"><div class="page-header"><h2>Workshop 4, Express</h2></div><span id="sec-6-1" class="anchor"></span><div id="" class="subgroup"><h3>Express</h3><p>Placeholder</p>
 </div><span id="sec-6-2" class="anchor"></span><div id="" class="subgroup"><h3>Databases</h3><p>Placeholder</p>
 </div></section><span id="sec-7" class="anchor"></span><section id="" class="group"><div class="page-header"><h2>Workshop 4 and a half, Databases</h2></div><span id="sec-7-1" class="anchor"></span><div id="" class="subgroup"><h3>Making information stick around</h3><p><img src="https://s3.amazonaws.com/compose-articles/2015/Mar/Doge-Big-Data-Meme_vb8hxi_n8oxuq.jpg" alt="Such data, so big, wow"></p>
