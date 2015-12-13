@@ -1,0 +1,12 @@
+Databases are these other kinds of web development things, separate from the webapp itself, where all we do is store information. They make it easy to store and access large amounts of data very quickly and efficiently. All important information, such as user accounts, catalogues, prices, wall posts, tweets etc. across any major website, app or anything else that runs on computers probably stores this information in a database.
+
+You may wondering why we should even consider databases when things like cookies exist. After all, we've been using those so far, and they work great! However, there are several reasons why databases need to exist, and why, in some scenarios, are far better than cookies.
+
+Firstly, not all information that needs to be stored is relevant to your application's user, and they probably won't have enough space on their device to store all of it! Imagine what would happen if Amazon's entire online catalogue was stored on your iPhone - it'd be a miracle if it even manages to switch on. Cookies are better suited to storing information that's unique and relevant to a user's interaction with an application. It's also crucial that this information is something we can afford to lose - cookies can be deleted in an instance with the 'Clear Cookies' option on all web browsers, and some users disable cookies entirely!
+
+Databases let us store information we need, and give us greater control over how it's handled. Modern databases can store huge amounts of data in several formats, allowing it to be structured, organized and quickly acessible. However, it does mean there's another layer of trouble that has to be tackled, in dealing with asking our databases for data and sending new data from our web application. This is usually doe through *queries* to a database.
+
+![Don't query SQL](http://www.quickmeme.com/img/9a/9a87002957d106568dcfc2b8135c213b608a268232d7259fbc19d42b831488cd.jpg)
+
+That's why MongoDB is so popular with NodeJS. While it is still a separate database, all the data that you get from the database is in the 
+JSON format. That's right, just JSON! So when we ask Mongo for results, it can give us an array of javascript objects and that means we don't have to worry about the formatting of the data, cause it's already in the format we need! You might hear people argue for (or against) the use of MongoDB because it's a NoSQL database, but this has a lot of tradeoffs and there's no clear cut winner between SQL and NoSQL; they're each suited for different applications.

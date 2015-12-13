@@ -1,0 +1,1 @@
+Javascript is a scripting language and has very little to do with Java other than vaguely resembling it in syntax. By scripting language we mean that there are no Classes, Interfaces, Main Methods or any of the regular Object-Oriented Programming that we're (maybe) used to. You just write code in a file, link to it in your HTML and it exectutes.
