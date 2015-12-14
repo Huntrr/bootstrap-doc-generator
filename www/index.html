@@ -1077,8 +1077,539 @@ section and one more section afterwards to make it a bit cooler. First we&#39;ll
 functionality to change your name (because <code>Moniker</code> names are only so cool) and
 then we&#39;ll hook up to the Giphy API to let people post images and GIFs to the
 chat room. Ready? Let&#39;s go.</p>
-</div></section><span id="sec-6" class="anchor"></span><section id="" class="group"><div class="page-header"><h2>Workshop 4, Express</h2></div><span id="sec-6-1" class="anchor"></span><div id="" class="subgroup"><h3>Express</h3><p>Placeholder</p>
-</div><span id="sec-6-2" class="anchor"></span><div id="" class="subgroup"><h3>Databases</h3><p>Placeholder</p>
+<p>First, names. Now that you know how the server and client can communicate and
+send messages, you should try to figure how we might use this protocol to change
+a user&#39;s name.</p>
+<p>The answer, of course, is another message handler. Now, we&#39;ll create a <code>NAME</code>
+message that can be sent back and forth between the server and client to update
+a user&#39;s name. We should probably model it like this:</p>
+<ol>
+<li><p>User 1 sends a <code>NAME</code> message to the server, requesting a particular name</p>
+</li>
+<li><p>The server validates the <code>data</code> of the <code>NAME</code> message, makes sure its
+a unique name, and, if it is, broadcasts a <code>NAME</code> message to the whole server
+to reflect the change.</p>
+</li>
+<li><p>All users receive a <code>NAME</code> message informing them of the update, and they
+change their <code>users</code> dictionaries accordingly.</p>
+</li>
+</ol>
+<p>We&#39;ll probably also want some kind of <code>ERROR</code> message the server can throw if
+the name is invalid, but we&#39;ll get there later.</p>
+<p>First, let&#39;s open up <code>server/server.js</code> and create the handler for this <code>NAME</code>
+message. It&#39;ll go below our handler for <code>MESG</code>, above the handler for
+<code>disconnect</code>, and it should look something like this:</p>
+<pre><code class="lang-javascript">  /**
+   * Handles NAME
+   * When a client tries to change their name
+   * Data object contains:
+   *   - newName
+   */
+  socket.on(&#39;NAME&#39;, (data) =&gt; {
+    let user = users[socket.id];
+    console.log(`:NAME - &lt;${user.getName()}&gt; wants to change name to`
+                + ` &lt;${data.newName}&gt;`);
+
+    if(isUniqueName(data.newName)) {
+      // success!
+      console.log(
+        `:NAME - &lt;${user.getName()}&gt; changed name to &lt;${data.newName}&gt;`);
+      user.setName(data.newName);
+      io.emit(&#39;NAME&#39;, {user: user.toObj()});
+    } else {
+      // failure :(
+      console.log(&#39;:ERROR - NON_UNIQUE_NAME&#39;);
+      socket.emit(&#39;ERROR&#39;, {message: &#39;NON_UNIQUE_NAME&#39;});
+    }
+  });
+</code></pre>
+<p>Try to parse this method yourself.</p>
+<p>First we <code>let user</code> be the user from <code>users</code> that send the message. We then
+check to see if the requested name <code>isUnique</code>. If it is, we update <code>user</code>&#39;s name
+on the server and then <code>io.emit</code> the new <code>user</code> object to the whole server.
+We&#39;ll assume that, once we set it up, the <code>NAME</code> handler on the client knows how
+to handle this data.</p>
+<p>If the name isn&#39;t unique, we fail <code>:(</code> and <code>socket.emit</code> an <code>ERROR</code> message to
+the client that tried to update its name.</p>
+<p>Now, we&#39;ll open up <code>client/js/socket-client.js</code> and add the handlers to the
+client. First, we&#39;ll add a handler for the <code>NAME</code> message below the <code>MESG</code>
+handler. It should look something like this:</p>
+<pre><code class="lang-javascript">/**
+ * Handles NAME events.
+ * Updates a users name.
+ * Data object:
+ *   - user (the updated user object)
+ */
+socket.on(&#39;NAME&#39;, function (data) {
+  var user = data.user;
+  var old = users[user.id];
+  users[user.id] = user;
+
+  console.log(&#39;:NAME - &lt;&#39; + old.string + &#39;&gt; changed to &lt;&#39; + user.name + &#39;&gt;&#39;);
+
+  postMessage(infoColor,
+              &#39;&amp;lt;&#39; + old.name + &#39;&amp;gt; changed their name to &amp;lt;&#39; + user.name + &#39;&amp;gt;&#39;);
+});
+</code></pre>
+<p>As you can see, the function parses the <code>user</code> object in the received <code>data</code>
+object and uses it to update its client-sided dictionary of <code>users</code>. Then it
+<code>postMessage</code>s an update to the message box so the user knows what&#39;s happened.
+Nice and simple.</p>
+<p>Next, we&#39;ll add a handler for <code>ERROR</code>s below this <code>NAME</code> handler. It&#39;ll look
+very similar to our <code>MESG</code> handler, but it&#39;ll print an error in red.</p>
+<pre><code class="lang-javascript">/**
+ * Handles ERROR events.
+ * Data object:
+ *   - message
+ */
+socket.on(&#39;ERROR&#39;, function (data) {
+  console.log(&#39;:ERROR - &#39; + data.message);
+
+  postMessage(errorColor, &#39;ERROR: &#39; + data.message);
+});
+</code></pre>
+<p>Nice and simple.</p>
+<p>However, we still don&#39;t have a way to actually send the <code>NAME</code> change request
+from the client. For that, we&#39;ll have to add <strong>commands</strong>.</p>
+<h4 id="adding-commands">Adding Commands</h4>
+<p>In this case, we&#39;ll keep commands entirely in <code>socket-client.js</code>. For this,
+we&#39;ll start by updating the <code>sendMessage</code> helper to determine if a particular
+message is a command.</p>
+<pre><code class="lang-javascript">/**
+ * Sends a MESG to the server
+ */
+function sendMessage(message) {
+  // check if it&#39;s a command
+  if(message.substring(0,1) != &#39;/&#39;) {
+    socket.emit(&#39;MESG&#39;, {message: message});
+  } else {
+    // it&#39;s a command!
+    let params = message.substring(1).split(&#39; &#39;);
+    let cmd = params[0];
+
+    sendCommand(cmd, params);
+  }
+}
+</code></pre>
+<p>Here, we add an <code>if</code>/<code>else</code> block that checks if the first letter of a message
+is <code>/</code>. This&#39;ll signify our command. If you want, you can change <code>/</code> to
+something else, but I figured <code>/</code> is pretty standard for these things. If the
+<code>message</code> is a command, it parses the parameters into an array using standard
+Javascript and then called <code>sendCommand</code> on the result.</p>
+<p>Obviously this isn&#39;t enough. We still need to write a <code>sendCommand</code> function
+that actually handles these commands. Let&#39;s do that now.</p>
+<pre><code class="lang-javascript">/**
+ * Handles commands
+ */
+function sendCommand(cmd, params) {
+  console.log(&#39;User attempted cmd &#39; + cmd);
+  console.log(&#39;Params: &#39; + params);
+
+  switch(cmd.toLowerCase()) {
+    case &#39;setname&#39;:
+      setName(params[1]);
+      break;
+
+    default:
+      postMessage(errorColor, &#39;ERROR: Invalid command &quot;&#39; + cmd + &#39;&quot;&#39;);
+  }
+
+}
+</code></pre>
+<p>Obviously there&#39;s only one command at this point, so for now this function is
+simple. We do a switch statement on the <code>cmd</code> and if it is <code>setname</code> we know the
+user is trying to change their name. The last thing to do is to add a <code>setName</code>
+function to the bottom of the file that&#39;ll catch the program when it executes
+<code>setName(params[1]);</code>. That should look something like:</p>
+<pre><code class="lang-javascript">/**
+ * Sends a NAME message to the server
+ * changing this users name
+ */
+function setName(newName) {
+  socket.emit(&#39;NAME&#39;, {newName: newName});
+}
+</code></pre>
+<p>See? All <code>setName</code> needs to do is <code>socket.emit</code> a <code>NAME</code> message with a data
+object containing the <code>newName</code> field. Our methods on the server will handle the
+rest.</p>
+<p>If everything was done right, the commands should work now. Try opening up a few
+instances of the chat client (don&#39;t forget to run the server) and use `/setname</p>
+<p><newname>` to edit your name. Does it work? What happens if you enter an
+already-existing name? What happens if you type a valid command?</p>
+<p>Next up: One more command. Let&#39;s allow users to upload images.</p>
+</div><span id="sec-5-10" class="anchor"></span><div id="" class="subgroup"><h3>The Image Command</h3><p>Let&#39;s add a command to upload images from a URL.</p>
+<p>Again, we&#39;ll start in <code>server/server.js</code>, adding a handler for a new <code>IMG</code>
+message. Below the <code>NAME</code> handler, add this:</p>
+<pre><code class="lang-javascript">/**
+ * Sends an image (specified by a url) to
+ * all clients
+ * Data object contains:
+ *   - url
+ */
+socket.on(&#39;IMG&#39;, (data) =&gt; {
+  let user = users[socket.id];
+  console.log(`:IMG - &lt;${user.getName()}&gt; IMAGE @ ${data.url}`);
+
+  let message = {
+    from: user.getName(),
+    message: `&lt;img src=&quot;${data.url}&quot; class=&quot;message-image&quot;&gt;`
+  };
+
+  io.emit(&#39;MESG&#39;, message);
+});
+</code></pre>
+<p>As you can see, the <code>IMG</code> handler looks very similar to <code>MESG</code>&#39;s handler. The
+only difference is that, instead of the <code>message</code> content being text, it&#39;s HTML
+for an image. Then, to keep things super simple, we just <code>io.emit</code> the <code>message</code>
+as a <code>MESG</code>, which means the client already knows what to do when it receives
+the message!</p>
+<p>Finally, we open up <code>client/js/socket-client.js</code> to add support for this new
+command. At the top of the switch statement for the <code>sendCommand</code> function, add
+this block: </p>
+<pre><code class="lang-javascript">case &#39;image&#39;:
+  sendImage(params[1]);
+  break;
+</code></pre>
+<p>Next, let&#39;s write the <code>sendImage</code> function. Stick this at the bottom of the
+file:</p>
+<pre><code class="lang-javascript">/**
+ * Serves an image
+ */
+function sendImage(imgUrl) {
+  socket.emit(&#39;IMG&#39;, {url: imgUrl});
+}
+</code></pre>
+<p>Like with <code>setName</code>, this command just <code>socket.emit</code>s the necessary information
+to the server. That&#39;s it! Now run the server, open some clients, and try sending
+some images! Note that the command takes the shape of <code>/image
+http://example.com/image.png</code>.</p>
+<p>Next up: Express, Giphy, and Databases!</p>
+</div></section><span id="sec-6" class="anchor"></span><section id="" class="group"><div class="page-header"><h2>Workshop 4, Express</h2></div><span id="sec-6-1" class="anchor"></span><div id="" class="subgroup"><h3>Express</h3><p><a href="http://expressjs.com/en/index.html">Express</a> is a web framework for NodeJS.</p>
+<p>Right now, our app is pretty cool. We have some static pages, and a neat Node
+script that uses Socket.IO to handle back-and-forth chat messages with our
+server.</p>
+<p>But, in its current state, that isn&#39;t very useful. For example, if we just
+opened up a web browser and navigated to our Node server, we wouldn&#39;t see
+anything useful! Our server <em>functions</em>. It <em>knows</em> how to handle web sockets,
+but it doesn&#39;t yet know how to handle basic HTTP requests. So the server doesn&#39;t
+know how to handle arbitrary connections on the internet, which means it can&#39;t
+serve our webpages to clients by itself.</p>
+<p>That&#39;s where Express comes in. Node, on its own, has a pretty nice <code>http</code>
+library for building <code>http</code> servers, but Express massively simplified the
+project, which is why many large applications built with Node depend on Express
+to handle their HTTP routing. For this chat server, we&#39;re going to use Express
+to (1) serve our static pages (so, rather than clicking the <code>index.html</code> file we
+can just navigate to <code>localhost:3000</code> in the web browser) and (2) handle
+a simple route for Giphy integration.</p>
+<p>Before we actually build the meat of the Express application, I&#39;ll try to give
+a brief overview of what HTTP servers do. Realize this is oversimplified. It&#39;s
+meant to give an overview of web servers in the context of Express and Node, and
+if you&#39;re really interested in learning more, you should hit Google, Wikipedia,
+Stackoverflow, and whatnot.</p>
+<p>HTTP servers respond to various kinds of HTTP requests. The most common kind of
+HTTP request you see on a daily basis are <code>GET</code> requests. Every time you open up
+<code>Generic Web Browser</code>, type a web address and hit enter, you&#39;re sending an HTTP
+<code>GET</code> request for some content online. Usually, the server will respond by
+streaming you a <code>.html</code> or <code>.php</code> or image file. Some services (like what we&#39;ll
+build today) can also respond to <code>GET</code> requests with <code>.json</code> files, or really
+any kind of data whatsoever. Sometimes the server will tag the response as being
+an error. You&#39;ve probably seen this before in some capacity or another; the most
+common error is, of course, error <code>404</code>.</p>
+<p>That said, my favorite error is still error <code>418</code>.</p>
+<p><img src="https://i1.wp.com/fat.gfycat.com/EquatorialAjarBlackfootedferret.gif" alt="Error 418
+@ Google.com"></p>
+<p>(this is <a href="http://www.google.com/teapot">actually a thing</a>)</p>
+<p>HTTP servers can also respond to other kinds of requests. Although I&#39;ve never
+seen a server respond to an HTTP <code>BREW</code> request (that&#39;s where Error <code>418</code>
+usually occurs), other common request types include the <code>POST</code> for posting new
+data to a database (like creating a status update on Facebook) or <code>PUT</code> for
+putting an update to old data. There&#39;s even an HTTP <code>DELETE</code> request.</p>
+<p>Together, these kinds of requests are referred to as HTTP Verbs, and Express
+gives us a really nice interface for building different routes to handle these
+various verbs. In this workshop, we&#39;ll show the construction of a simple <code>GET</code>
+request handler, but you should be able to use that, along with this
+information, as a jumping off point for more complicated web applications.</p>
+<p>First off, let&#39;s set up our server to use Express.</p>
+</div><span id="sec-6-2" class="anchor"></span><div id="" class="subgroup"><h3>Express Server</h3><p>The first thing we need to do is swap out our pure Socket.IO server for an
+Express server. We&#39;ll then re-hook Socket.IO to utilize the Express server for
+WebSockets.</p>
+<p>To do that, delete this code</p>
+<pre><code class="lang-javascript">/* This sets up a pure socket-io server.
+ * Later in the guide we upgrade to a full
+ * express server */
+let Server = require(&#39;socket.io&#39;);
+let io = Server(3000); //construct a server on port 3000
+console.log(&#39;SocketIO listening on port 3000&#39;);
+</code></pre>
+<p>And replace it with the Express equivalent:</p>
+<pre><code class="lang-javascript">// sets up express
+let path = require(&#39;path&#39;);
+let express = require(&#39;express&#39;);
+
+let app = express();
+app.use(express.static(path.join(__dirname, &#39;../client&#39;)));
+
+// TODO: 404 error
+
+let server = app.listen(3000, () =&gt; {
+  console.log(&#39;Express server listening on port 3000&#39;);
+});
+
+let io = require(&#39;socket.io&#39;)(server);
+</code></pre>
+<p>Most of this is boilerplate, so what it does isn&#39;t super important. Essentially,
+we <code>require</code> in <code>path</code> (which helps parse file URIs) and <code>express</code> and then set
+up a new <code>app</code> by calling the <code>express()</code> function.</p>
+<p>Express apps tend to rely a lot on the <code>app.use</code> function in their
+initialization. <code>.use</code> lets us pass a function to Express which it&#39;ll use as
+&quot;middleware.&quot; In simple terms, if you pass a function to <code>app.use</code>, it&#39;ll be
+called every time Express gets a request. Here, we make sure our first
+middleware (middleware is called in order) is the build in <code>express.static</code>
+middleware. As its name implies, it&#39;s built for serving static files. Here, we
+tell it to serve statically the files in <code>../client</code> which, clearly, is where
+all our client files are.</p>
+<p>Usually you&#39;d have a <code>public</code> folder sitting next to your <code>server.js</code>, but we
+don&#39;t need to re-structure the project now just for that.</p>
+<p>Finally, we create a <code>server</code> that&#39;s simply the Express <code>app</code> listening on port
+3000, and then we pass that <code>server</code> to Socket.IO, initializing <code>io</code> to be
+a Socket.IO instance that runs on the Express server, rather than by itself.</p>
+<p>If we run this code, we should find that everything still works, but now,
+instead of having to open the <code>index.html</code> file manually, we can simply direct
+a web browser to <code>localhost:3000</code>.</p>
+<p>That, in essence, is Express.</p>
+<p>But Express can also do a lot more.</p>
+</div><span id="sec-6-3" class="anchor"></span><div id="" class="subgroup"><h3>Error 404</h3><p>For one thing, Express can serve <code>view</code>s. Views are like dynamically rendered
+HTML templates. So far, we&#39;ve only had experience with static HTML, but Express
+can be configured to use a view engine and serve a kind of dynamically compiled
+HTML. </p>
+<p>A common use case of this is in profile pages. Rather than create a static
+<code>.html</code> for every user, websites typically make a <code>profile</code> view that has
+placeholders for all the important information (like names and emails and
+whatnot) then, a view engine like <code>hjs</code> or <code>Jade</code> or <code>Jinja</code> (if you&#39;re using
+Python) will fill in the blanks in the template, sending the finished HTML file
+(with all the profile fields filled out) to the client.</p>
+<p>Here, we&#39;ll use the <code>hjs</code> templating language for a simple 404 page. First,
+replace <code>// TODO: 404 Error</code> with this code:</p>
+<pre><code class="lang-javascript">app.set(&#39;views&#39;, path.join(__dirname, &#39;views&#39;));
+app.set(&#39;view engine&#39;, &#39;hjs&#39;);
+
+// TODO: Routes
+
+// 404
+app.use( (req, res, next) =&gt; {
+  let err = new Error(&#39;Not found&#39;);
+  err.status = 404;
+  next(err);
+} );
+app.use( (err, req, res, next) =&gt; {
+  res.status(err.status || 500);
+  res.render(&#39;error&#39;, {
+    errorMessage: err.message,
+    error: err
+  });
+} );
+</code></pre>
+<p>This code configures our app to use the <code>views</code> directory as a container for
+its views, using <code>hjs</code> as the view engine.</p>
+<p>Then we add some more middleware. Because this middleware runs last, after
+everything else is attended to, it should only be reached if <strong>no other
+middleware knew how to handle the request</strong>. That means this middleware is
+executed only when the file searched for is invalid (which is why the
+middleware stack wasn&#39;t interrupted earlier, nothing knew how to handle the
+request). In cases like these, we can rather safely -- as we do here -- set the
+error code to <code>404</code> indicating the resource wasn&#39;t found. Then if all else
+fails and the request is unresolved, we render a simple template containing the
+error.</p>
+<p>The <code>res</code> (short for response) object in Express always has a <code>render</code> function
+that&#39;ll use the current view engine to render a <code>view</code>. In this case, we
+<code>res.render</code> the <code>error</code> view, passing it the error message in an object.</p>
+<p>Next, we need to create the <code>error</code> view. For this, first create
+a <code>server/views</code> folder to contain our views. Then, in that folder, create an
+<code>error.hjs</code> file. Note it&#39;s a <code>.hjs</code> and not a <code>.html</code> since this is
+a template. It will get resolved into HTML later.</p>
+<p>The contents of <code>error.hjs</code> should look like this:</p>
+<pre><code class="lang-javascript">&lt;html&gt;
+    &lt;head&gt;
+        &lt;title&gt;Error&lt;/title&gt;
+        &lt;link rel=&#39;stylesheet&#39; href=&#39;/css/main.css&#39; /&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;h1&gt;{{ errorMessage }}&lt;/h1&gt;
+            {{#error}}
+        &lt;h3&gt;{{ status }}&lt;/h3&gt;
+            &lt;pre&gt;{{ stack }}&lt;/pre&gt;
+        {{/error}}
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>It looks a lot like HTML. That&#39;s a cool thing about hjs. What differentiates hjs
+from HTML are those <code>{{ }}</code> blocks. These are placeholders for information. You
+see this template puts <code>{{ errorMessage }}</code> in the <code>&lt;h1&gt;</code> tag at the top of the
+page. It also uses <code>{{#error}}</code> to check if <code>error</code> is non-null, in which case
+everything between the <code>{{#error}}</code> and <code>{{/error}}</code> block is rendered (in this
+case it&#39;s a stack trace of the error).</p>
+<p>Obviously in a production application you wouldn&#39;t print the stack trace of an
+error, but for these purposes it might help us debug issues.</p>
+<p>Now, the web app should be mostly working. If you go to, for example
+<code>localhost:3000/not/a/real/page</code>, you should get an Error 404.</p>
+<p>Next up, routes.</p>
+</div><span id="sec-6-4" class="anchor"></span><div id="" class="subgroup"><h3>Giphy Route</h3><p>Another cool feature of Express is routing. You can think of a route as
+a definition for how the HTTP server should handle an HTTP request to a specific
+URL. For example, Google might have a route that handles <code>GET</code> requests to the
+url <code>google.com/search/&lt;query&gt;</code> where <code>&lt;query&gt;</code> is some arbitrary search term.
+Facebook might (but doesn&#39;t) have a route that handles <code>POST</code> requests to the
+url <code>facebook.com/status/new/&lt;status&gt;</code>, where <code>&lt;status&gt;</code> is the status update.
+Complicated production web applications have many many routes. Some will perform
+database manipulation. Others might act on the <code>res</code> (response) object to
+<code>res.render</code> a view, kind of like our <code>404</code> handler. Others still might <code>BREW</code>
+a cup of tea or return an error <code>418</code> if coffee were requested.</p>
+<p>For our purposes, we&#39;re going to stick to a simple HTTP <code>get</code> requests that uses
+the Giphy API to resolve a search term into a <code>.gif</code> (please pronounce <code>.gif</code>
+with a soft &#39;g&#39;, as in &#39;giraffe&#39;). </p>
+<p>First, open up <code>server/server.js</code> and replace <code>// TODO: Routes</code> with this code.</p>
+<pre><code class="lang-javascript">let routes = require(&#39;./routes&#39;);
+app.use(&#39;/&#39;, routes);
+</code></pre>
+<p>This code <code>require</code>s a new module (from <code>./routes.js</code>) and then tells Express to
+use this file whenever a request is made to a child of the <code>/</code> URL (so,
+essentially, any request). If we wanted to, we might <code>.use</code> different route
+files for different endpoints, like instead of having all handled at the <code>/</code>
+level, we might have one route handler that handles routes to <code>/user/</code> and
+another that handles routes to <code>/blog/</code>, etc. For now though, we only have
+a single route, so this setup makes sense.</p>
+<p>To finalize the setup, we need to actually build our <code>routes.js</code> handler.
+Please create a <code>server/routes.js</code> file and fill it like this:</p>
+<pre><code class="lang-javascript">&#39;use strict&#39;;
+
+let giphy = require(&#39;giphy-api&#39;)();
+let express = require(&#39;express&#39;);
+let router = express.Router();
+
+router.get(&#39;/test&#39;, (req, res) =&gt; {
+  return res.send(&#39;Test route&#39;);
+});
+
+module.exports = router;
+</code></pre>
+<p>As you can see, this code does a couple things. It <code>require</code>s the <code>giphy-api</code>
+(we&#39;ll use that later) and then <code>require</code>s Express, grabbing Express&#39;s router.</p>
+<p>Then it builds on that router, using <code>router.get</code> to create a <code>/test</code> route.
+Indeed, we could just as easily used the <code>router.post</code> or <code>router.put</code>
+function, as Express&#39;s router is, again, built to handle all kinds of HTTP
+verbs (but since we&#39;re creating a simple endpoint, <code>router.get</code> is sufficient).</p>
+<p>This route is very simple. It responds to <code>GET</code> requests pointed at <code>/test</code>.
+When express gets a request like this, it calls the second parameter to the
+function, an anonymous function that takes a <code>req</code> (request) and <code>res</code>
+(response) as its parameters. The <code>req</code> contains all kinds of information about
+the request, we&#39;ll see how to use it later, while the <code>res</code> object contains
+functions to perform on the upcoming response. In this case, we return
+<code>res.send(&#39;Test route&#39;);</code> which just responds to the request with raw text. If
+we run the server now, and navigate to <code>localhost:3000/test</code>, we&#39;d see the
+words <code>Test route</code> on the screen. We could just as easily have set up the
+<code>res.send</code> to serve an HTML file or, if we wanted to be super fancy, we could
+have used <code>res.render</code> to render another view. But, for now, this is simple
+enough.</p>
+<p>Finally, the code does <code>module.exports = router</code>. Like in <code>user.js</code>, this
+export sets the result of <code>require(&#39;./routes&#39;)</code>. In this case, we set it to our
+<code>router</code>, so that Express can consume the routing information and handle the
+routes we define in this file.</p>
+<h4 id="but-what-about-giphy-">But what about Giphy?</h4>
+<p>Finally, we need to make a route for handling Giphy requests. Beneath the
+<code>test</code> route (but above the export), type this code:</p>
+<pre><code class="lang-javascript">router.get(&#39;/giphy/:fmt/:search&#39;, (req, res) =&gt; {
+  console.log(`Giphy search for term ${req.params.search}`);
+
+  giphy.random({
+    tag: req.params.search,
+    rating: &#39;g&#39;,
+    fmt: req.params.fmt
+  }, (err, result) =&gt; {
+    if(err) {
+      res.status(err.status || 500);
+      res.render(&#39;error&#39;, {
+        errorMessage: err.message,
+        error: err
+      });
+    }
+
+    res.send(result);
+  });
+});
+</code></pre>
+<p>This is, obviously, a more complicated route. In this case, we use route
+parameters, to parameterize the route. This route is thus built to handle
+<code>GET</code> requests pointed at <code>/giphy/&lt;fmt&gt;/&lt;search&gt;</code> (Express and many frameworks
+use <code>:variable</code> to define route parameters). This means we can put anything in
+the place of <code>:fmt</code> and <code>:search</code> and this route will still be used. We can then
+access what was put in those parameters by using the <code>req</code> object. Here, when
+we call the <code>giphy.random</code> function exposed by <code>giphy-api</code>, we pass it
+<code>req.params.search</code> as the tag (since that&#39;s what was put in <code>:search</code>) and
+<code>req.params.fmt</code> for the requested format of the result. Then, when the
+asynchronous call to Giphy is complete, we <code>res.send</code> the <code>result</code>. If there
+was an error, we <code>res.render</code> the error page.</p>
+<p>That&#39;s the complete server code. Try running the server and navigating to
+<code>localhost:3000/test</code> or, if you&#39;re feeling adventurous, go to
+<code>localhost:3000/html/nodejs</code>. The <code>html</code> part will tell Giphy we want an <code>html</code>
+response, and you can replace <code>nodejs</code> with whatever Giphy search term you
+want.</p>
+<p>I think that&#39;s pretty cool.</p>
+<p>Now let&#39;s head back into our client and set up a <code>/giphy</code> command.</p>
+<h4 id="final-notes-on-express">Final notes on Express</h4>
+<p>This has been a very brief overview of Express. The Express framework is very
+powerful, and can be used to compose very complicated applications. I&#39;ve tried
+to overview the most important bits, from middleware to templating to routing.
+If you really want to keep building on these skills, you should find some
+Express tutorials online. You should find that you now have a good foundation
+to understand more complicated uses of the framework.</p>
+</div><span id="sec-6-5" class="anchor"></span><div id="" class="subgroup"><h3>Giphy AJAX</h3><blockquote>
+<p>Giphy AJAX</p>
+</blockquote>
+<p>That&#39;s surely a term that made no sense to anyone a decade ago.</p>
+<p>So we have a Giphy API exposed on our server. How do we access it? Well, with
+<a href="https://goo.gl/PXhMsS">AJAX</a> of course! AJAX stands for Asynchronous
+Javascript and XML and it&#39;s a very common protocol for sending HTTP requests
+using Javascript. Here, we&#39;ll create a <code>/giphy</code> command that uses AJAX to send
+a <code>GET</code> request to our server for the right Giphy image, and then we&#39;ll send
+that image using <code>sendImage</code>. Let&#39;s jump back into <code>client/js/socket-client.js</code>
+and see how that works.</p>
+<p>In <code>sendCommand</code>, beneath the <code>image</code> case (but still about the <code>default</code>
+case), you&#39;ll want to add this block:</p>
+<pre><code class="lang-javascript">case &#39;giphy&#39;:
+  params.shift();
+  var term = params.join(&#39; &#39;);
+  console.log(&#39;Giphy request of: &#39; + term);
+  $.ajax({
+    method: &quot;GET&quot;,
+    url: &quot;giphy/json/&quot; + term,
+  }).done(function (result) {
+    if(result.data.image_url == undefined) {
+      postMessage(errorColor, &#39;ERROR: No results for giphy search of &quot;&#39;
+                  + term + &#39;&quot;&#39;);
+    } else {
+      sendImage(result.data.image_url);
+    }
+  });
+
+  break;
+</code></pre>
+<p>This creates the <code>giphy</code> command. The bulk of the command work is done in this
+call to <code>$.ajax</code>. This is JQuery&#39;s built in AJAX handler. It&#39;s used by passing
+it an object with options. The options we use here are <code>method</code> (<code>GET</code>) and
+<code>url</code> (we want the <code>giphy/json/</code> endpoint since we want to retrieve json data,
+and we also pass it our search term). Then, we use <code>.done</code> on this AJAX
+request, which lets us pass a function to be called when the AJAX request is
+complete. We have to do this since AJAX is asynchronous, meaning it run
+separate from the rest of our code.</p>
+<p>In that <code>.done</code> function, we handle the results of the request -- our callback
+takes a <code>result</code> parameter with those results. If no image is found, we return
+an error. If an image is found, we call <code>sendImage</code> on the
+<code>result.data.image_url</code> that was passed back.</p>
+<p>That should be it. If we run the server now and navigate to <code>localhost:3000</code>,
+we should be able to use all of our commands. <code>/giphy &lt;search terms&gt;</code> should
+result in <code>.gif</code>s, and everything should work as intended.</p>
+<p>There&#39;s obviously a lot more to be done with AJAX. If you want to learn more,
+the <a href="http://api.jquery.com/jquery.ajax/">jQuery docs</a> are a great place to
+start.</p>
 </div></section><span id="sec-7" class="anchor"></span><section id="" class="group"><div class="page-header"><h2>Workshop 4 and a half, Databases</h2></div><span id="sec-7-1" class="anchor"></span><div id="" class="subgroup"><h3>Making information stick around</h3><p><img src="https://s3.amazonaws.com/compose-articles/2015/Mar/Doge-Big-Data-Meme_vb8hxi_n8oxuq.jpg" alt="Such data, so big, wow"></p>
 <p>Topics to be covered:</p>
 <ul>
@@ -1217,7 +1748,7 @@ module.exports = router;
 
 <nav class="col-xs-3 docs-sidebar">
 <ul class="nav nav-stacked" id="sidebar">
-<li><a href="#sec-1">Code Weekend Spring 2k16</a><ul class="nav nav-stacked"><li><a href="#sec-1-1">Building your first webapp</a></li></ul></li><li><a href="#sec-2">Introduction to Web Development</a><ul class="nav nav-stacked"><li><a href="#sec-2-1">Web Pages and the basics of development</a></li><li><a href="#sec-2-2">An Introduction to (the) Life (of a Developer)</a></li><li><a href="#sec-2-3">An Introduction to the web</a></li><li><a href="#sec-2-4">What is Terminal&#47;Command Prompt?</a></li></ul></li><li><a href="#sec-3"> Workshop 1, HTML&#47;CSS</a><ul class="nav nav-stacked"><li><a href="#sec-3-1">Simple HTML and CSS</a></li><li><a href="#sec-3-2">Umm, what about CSS?</a></li><li><a href="#sec-3-3">Let's take a look at what CSS looks like!</a></li></ul></li><li><a href="#sec-4"> Workshop 2, Javascript</a><ul class="nav nav-stacked"><li><a href="#sec-4-1">Javscript, finally!</a></li><li><a href="#sec-4-2">In fact...</a></li></ul></li><li><a href="#sec-5">Workshop 3, The Server</a><ul class="nav nav-stacked"><li><a href="#sec-5-1">Node</a></li><li><a href="#sec-5-2">Package.json</a></li><li><a href="#sec-5-3">Socket.io</a></li><li><a href="#sec-5-4">server.js</a></li><li><a href="#sec-5-5">socket-client.js</a></li><li><a href="#sec-5-6">Functions</a></li><li><a href="#sec-5-7">Users</a></li><li><a href="#sec-5-8">The socket handler</a></li><li><a href="#sec-5-9">Chat</a></li></ul></li><li><a href="#sec-6">Workshop 4, Express</a><ul class="nav nav-stacked"><li><a href="#sec-6-1">Express</a></li><li><a href="#sec-6-2">Databases</a></li></ul></li><li><a href="#sec-7">Workshop 4 and a half, Databases</a><ul class="nav nav-stacked"><li><a href="#sec-7-1">Making information stick around</a></li><li><a href="#sec-7-2">Installing MongoDB</a></li><li><a href="#sec-7-3">Running MongoDB</a></li><li><a href="#sec-7-4">Why use a database? And why MongoDB?</a></li><li><a href="#sec-7-5">How MongoDB structures your data</a></li><li><a href="#sec-7-6">Integrating MongoDB into the web app</a></li><li><a href="#sec-7-7">You're done!</a></li><li><a href="#sec-7-8">Files</a></li></ul></li><li><a href="#sec-8">Thanks for being a part of Code Weekend!</a><ul class="nav nav-stacked"><li><a href="#sec-8-1">We hope you enjoyed these workshops as much as we enjoyed making them for you.</a></li></ul></li></ul>
+<li><a href="#sec-1">Code Weekend Spring 2k16</a><ul class="nav nav-stacked"><li><a href="#sec-1-1">Building your first webapp</a></li></ul></li><li><a href="#sec-2">Introduction to Web Development</a><ul class="nav nav-stacked"><li><a href="#sec-2-1">Web Pages and the basics of development</a></li><li><a href="#sec-2-2">An Introduction to (the) Life (of a Developer)</a></li><li><a href="#sec-2-3">An Introduction to the web</a></li><li><a href="#sec-2-4">What is Terminal&#47;Command Prompt?</a></li></ul></li><li><a href="#sec-3"> Workshop 1, HTML&#47;CSS</a><ul class="nav nav-stacked"><li><a href="#sec-3-1">Simple HTML and CSS</a></li><li><a href="#sec-3-2">Umm, what about CSS?</a></li><li><a href="#sec-3-3">Let's take a look at what CSS looks like!</a></li></ul></li><li><a href="#sec-4"> Workshop 2, Javascript</a><ul class="nav nav-stacked"><li><a href="#sec-4-1">Javscript, finally!</a></li><li><a href="#sec-4-2">In fact...</a></li></ul></li><li><a href="#sec-5">Workshop 3, The Server</a><ul class="nav nav-stacked"><li><a href="#sec-5-1">Node</a></li><li><a href="#sec-5-2">Package.json</a></li><li><a href="#sec-5-3">Socket.io</a></li><li><a href="#sec-5-4">server.js</a></li><li><a href="#sec-5-5">socket-client.js</a></li><li><a href="#sec-5-6">Functions</a></li><li><a href="#sec-5-7">Users</a></li><li><a href="#sec-5-8">The socket handler</a></li><li><a href="#sec-5-9">Chat</a></li><li><a href="#sec-5-10">The Image Command</a></li></ul></li><li><a href="#sec-6">Workshop 4, Express</a><ul class="nav nav-stacked"><li><a href="#sec-6-1">Express</a></li><li><a href="#sec-6-2">Express Server</a></li><li><a href="#sec-6-3">Error 404</a></li><li><a href="#sec-6-4">Giphy Route</a></li><li><a href="#sec-6-5">Giphy AJAX</a></li></ul></li><li><a href="#sec-7">Workshop 4 and a half, Databases</a><ul class="nav nav-stacked"><li><a href="#sec-7-1">Making information stick around</a></li><li><a href="#sec-7-2">Installing MongoDB</a></li><li><a href="#sec-7-3">Running MongoDB</a></li><li><a href="#sec-7-4">Why use a database? And why MongoDB?</a></li><li><a href="#sec-7-5">How MongoDB structures your data</a></li><li><a href="#sec-7-6">Integrating MongoDB into the web app</a></li><li><a href="#sec-7-7">You're done!</a></li><li><a href="#sec-7-8">Files</a></li></ul></li><li><a href="#sec-8">Thanks for being a part of Code Weekend!</a><ul class="nav nav-stacked"><li><a href="#sec-8-1">We hope you enjoyed these workshops as much as we enjoyed making them for you.</a></li></ul></li></ul>
 </nav>
     </div>
 
