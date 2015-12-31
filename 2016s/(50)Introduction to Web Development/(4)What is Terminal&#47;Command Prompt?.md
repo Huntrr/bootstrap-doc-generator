@@ -22,10 +22,10 @@ We've got to install a whole buch of stuff over the next few workshops. Let's st
 
 NOTE: Sometimes, when you save your work, a window will pop up asking you to buy Sublime. Just ignore this and hit "Cancel" and you can use it forever. Alternatively, you can buy it and support a fellow developer.
 
-### Making a Personal Landing Page
+### Making a Chat App
 
-Well done! You've got everything you need installed. Now let's test what you've learned in this workshop. Here's an [HTML](assets/files/sample.html) and a [CSS](assets/files/main.css) file. Try and use this as a base to create your own personal landing page. The adventurous ones among you can even try and create a complete static website; you know enough that you can just Google for anything you need. Take a look at some of our organizers' websites for inspiration ([Devesh](http://www.seas.upenn.edu), [Dhruv](http://dhruvagarwal.me)) or browse around the internet to see nice designs (like [Medium](http://medium.com)).
+Well done! You've got everything you need installed. Now let's test what you've learned in this workshop. Here's an [HTML](assets/files/sample.html) and a [CSS](assets/files/main.css) file. Try and use this as a base to create your own personal chat app. The adventurous ones among you can even try and create a complete static website; you know enough that you can just Google for anything you need. Take a look at some of our organizers' websites for inspiration ([Devesh](http://www.seas.upenn.edu), [Dhruv](http://dhruvagarwal.me)) or browse around the internet to see nice designs (like [Medium](http://medium.com)).
 
 #### Files
 
-You can download the [HTML](assets/files/sample.html) and [CSS](assets/files/main.css) files we looked at here by following these links. Use these as starting points for building your personal landing pages.
+You can download the [HTML](assets/files/index.html) and [CSS](assets/files/main.css) files we looked at here by following these links. Use these as starting points for building your personal chat app.
