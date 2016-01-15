@@ -6,7 +6,7 @@ docs.
 ## Usage
 
 To use, create a folder to contain your sections and subsections. Examples for
-Penn’s Code Weekend are in `2016s` and `2016f`. Essentially, each
+Penn’s Code Weekend are in `2016s` and `2015f`. Essentially, each
 subfolder is a `category`. Each `.md` or `.html` file contained therein is
 a `subcategory` with content. Running `node run.js <FOLDER>` will spit out your
 static page in `www`.
