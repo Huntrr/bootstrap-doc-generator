@@ -24,7 +24,7 @@ NOTE: Sometimes, when you save your work, a window will pop up asking you to buy
 
 ### Making a Chat App
 
-Well done! You've got everything you need installed. Now let's test what you've learned in this workshop. Here's an [HTML](assets/files/sample.html) and a [CSS](assets/files/main.css) file. Try and use this as a base to create your own personal chat app. The adventurous ones among you can even try and create a complete static website; you know enough that you can just Google for anything you need. Take a look at some of our organizers' websites for inspiration ([Devesh](http://www.seas.upenn.edu/~deveshd), [Dhruv](http://dhruvagarwal.me), [Hunter](http://hunterlightman.com)) or browse around the internet to see nice designs (like [Medium](http://medium.com)).
+Well done! You've got everything you need installed. Now let's test what you've learned in this workshop. Here's an [HTML](assets/files/sample.html) and a [CSS](assets/files/main.css) file. Try and use this as a base to create your own personal chat app. The adventurous ones among you can even try and create a complete static website; you know enough that you can just Google for anything you need. Take a look at some of our organizers' websites for inspiration ([Anton](http://www.sas.upenn.edu/~arelin/), [Devesh](http://www.seas.upenn.edu/~deveshd), [Dhruv](http://dhruvagarwal.me), [Hunter](http://hunterlightman.com)) or browse around the internet to see nice designs (like [Medium](http://medium.com)).
 
 #### Files
 
