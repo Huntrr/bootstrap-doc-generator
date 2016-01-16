@@ -86,9 +86,8 @@
 <li><a href="#simple-html-and-css">Basic HTML and CSS and how webpages are structured</a></li>
 <li><a href="#javascript-finally">Javascript, JSON and how to make things more fun</a></li>
 <li><a href="#what-is-terminalcommand-prompt">The basics of Terminal/Command Prompt</a></li>
-<li><a href="#making-a-personal-landing-page">Building your own personal landing page!</a></li>
 </ul>
-<p>This shouldn&#39;t take too long though, so whatever time we have left at the end of the workshop will be for you to make your own personal landing page!</p>
+<p>This shouldn&#39;t take too long though, so whatever time we have left at the end of the workshop will be for you to make your own personal chat app!</p>
 <p>Alright, let&#39;s get started!</p>
 </div><span id="sec-2-2" class="anchor"></span><div id="" class="subgroup"><h3>An Introduction to (the) Life (of a Developer)</h3><p>When coding, you&#39;ll run into tons of small problems and errors that you don&#39;t initially know how to solve. <strong><em>This is completely normal.</em></strong> In order to write solutions to every problem that you could hypothetically run into, you&#39;d need a manual taller than the Empire State building. </p>
 <p>Thankfully, we all have a resource with more information that we can possibly imagine - teh interwebz. You&#39;ve probably searched for things using Google before, but most coding problems can actually be solved by effectively Googling your issue. Here are some tips for finding the answers to all your problems on the Internet:</p>
@@ -221,22 +220,25 @@
     &lt;h1&gt;Code Weekend Sample Page&lt;/h1&gt;
     &lt;h2&gt;Here&#39;s a smaller heading. We can go all the way down to H6&lt;/h2&gt;
     &lt;!-- Here&#39;s a comment that will not show up on the actual page --&gt;
+
     &lt;p&gt;
       Here&#39;s a paragraph of text. You can fill in whatever you feel like in here and just end this tag to fininsh the paragraph.
     &lt;/p&gt;
     &lt;p&gt;
         Let&#39;s continue building our chat app. We&#39;ll first add a textarea element to input text, and apply some CSS properties to make it look pretty!
     &lt;/p&gt;
+
+
     &lt;form&gt;
-    &lt;textarea placeholder=&quot;Write your message here...&quot; required&gt;&lt;/textarea&gt;
-    &lt;button type=&quot;submit&quot;&gt;Send Message&lt;/button&gt;
+        &lt;textarea placeholder=&quot;Write your message here...&quot; required&gt;&lt;/textarea&gt;
+        &lt;button type=&quot;submit&quot;&gt;Send Message&lt;/button&gt;
     &lt;/form&gt;
     &lt;h3&gt; Messages &lt;/h3&gt;
     &lt;p&gt;
         Here&#39;s a list of all the messages so far:
     &lt;/p&gt;
-      &lt;ul&gt;
-      &lt;/ul&gt;
+    &lt;ul&gt;
+    &lt;/ul&gt;
   &lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
@@ -263,23 +265,28 @@
         &lt;h1&gt;Code Weekend Sample Page&lt;/h1&gt;
         &lt;h2&gt;Here&#39;s a smaller heading. We can go all the way down to H6&lt;/h2&gt;
         &lt;!-- Here&#39;s a comment that will not show up on the actual page --&gt;
+
         &lt;p class=&quot;red-text&quot; id=&quot;intro-para&quot;&gt;
             Here&#39;s a paragraph of text. You can fill in whatever you feel like in here and just end this tag to finish the paragraph.
         &lt;/p&gt;
         &lt;p&gt;
-        Let&#39;s continue building our chat app. We&#39;ll first add a textarea element to input text, and apply some CSS properties to make it look pretty!
+            Let&#39;s continue building our chat app. We&#39;ll first add a textarea element to input text, and apply some CSS properties to make it look pretty!
         &lt;/p&gt;
-    &lt;ul id=&quot;messages&quot;&gt;&lt;/ul&gt;
-    &lt;form id=&quot;message-form&quot; action=&quot;#&quot;&gt;
-    &lt;textarea id=&quot;message&quot; placeholder=&quot;Write your message here...&quot; required&gt;&lt;/textarea&gt;
-    &lt;button type=&quot;submit&quot;&gt;Send Message&lt;/button&gt;
-    &lt;/form&gt;
-    &lt;h3&gt; Messages &lt;/h3&gt;
-    &lt;p&gt;
-        Here&#39;s a list of all the messages so far:
-    &lt;/p&gt;
-      &lt;ul class=&quot;messages&quot;&gt;
-      &lt;/ul&gt;
+
+
+        &lt;ul id=&quot;messages&quot;&gt;&lt;/ul&gt;
+        &lt;form id=&quot;message-form&quot; action=&quot;#&quot;&gt;
+            &lt;textarea id=&quot;message&quot; placeholder=&quot;Write your message here...&quot; required&gt;&lt;/textarea&gt;
+            &lt;button type=&quot;submit&quot;&gt;Send Message&lt;/button&gt;
+        &lt;/form&gt;
+        &lt;h3&gt; Messages &lt;/h3&gt;
+
+
+        &lt;p&gt;
+            Here&#39;s a list of all the messages so far:
+        &lt;/p&gt;
+        &lt;ul class=&quot;messages&quot;&gt;
+        &lt;/ul&gt;
   &lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
@@ -617,6 +624,8 @@ contents of the form (overwriting the <code>val</code> of the text field to an e
 <p>Open up the page again. Try typing. Click send message. If everything worked,
 you should see jQuery working to push your messages to the screen.</p>
 <p>If that&#39;s not happening, blame Devesh.</p>
+</div><span id="sec-4-4" class="anchor"></span><div id="" class="subgroup"><h3>Download</h3><p>Click the link below to download the project up to this point:</p>
+<p><a href="files/jquery.zip">Javascript and JQuery .zip</a></p>
 </div></section><span id="sec-5" class="anchor"></span><section id="" class="group"><div class="page-header"><h2> The Server</h2></div><span id="sec-5-1" class="anchor"></span><div id="" class="subgroup"><h3>Node</h3><p>Node.js is, at its core, an environment for using Javascript to program web
 servers. Because some people like Javascript, and because we all think PHP
 sucks, the Internet in general seems to think Node is pretty cool. So, while we
@@ -1551,6 +1560,8 @@ to the server. That&#39;s it! Now run the server, open some clients, and try sen
 some images! Note that the command takes the shape of <code>/image
 http://example.com/image.png</code>.</p>
 <p>Next up: Express, Giphy, and Databases!</p>
+</div><span id="sec-5-11" class="anchor"></span><div id="" class="subgroup"><h3>Download</h3><p>Click the link below to download the project up to this point:</p>
+<p><a href="files/node.zip">Socket.io .zip files</a></p>
 </div></section><span id="sec-6" class="anchor"></span><section id="" class="group"><div class="page-header"><h2> Express</h2></div><span id="sec-6-1" class="anchor"></span><div id="" class="subgroup"><h3>Express</h3><p><a href="http://expressjs.com/en/index.html">Express</a> is a web framework for NodeJS.</p>
 <p>Right now, our app is pretty cool. We have some static pages, and a neat Node
 script that uses Socket.IO to handle back-and-forth chat messages with our
@@ -2015,7 +2026,7 @@ module.exports = router;
 
 <nav class="col-xs-3 docs-sidebar">
 <ul class="nav nav-stacked" id="sidebar">
-<li><a href="#sec-1">Code Weekend Spring 2k16</a><ul class="nav nav-stacked"><li><a href="#sec-1-1">Building your first webapp</a></li></ul></li><li><a href="#sec-2">Introduction to Web Development</a><ul class="nav nav-stacked"><li><a href="#sec-2-1">Web Pages and the basics of development</a></li><li><a href="#sec-2-2">An Introduction to (the) Life (of a Developer)</a></li><li><a href="#sec-2-3">An Introduction to the web</a></li><li><a href="#sec-2-4">What is Terminal&#47;Command Prompt?</a></li></ul></li><li><a href="#sec-3"> HTML&#47;CSS</a><ul class="nav nav-stacked"><li><a href="#sec-3-1">Simple HTML and CSS</a></li><li><a href="#sec-3-2">Umm, what about CSS?</a></li><li><a href="#sec-3-3">Let's take a look at what CSS looks like!</a></li><li><a href="#sec-3-4">Download</a></li></ul></li><li><a href="#sec-4"> Javascript</a><ul class="nav nav-stacked"><li><a href="#sec-4-1">Javscript, finally!</a></li><li><a href="#sec-4-2">In fact...</a></li><li><a href="#sec-4-3">JQuery</a></li></ul></li><li><a href="#sec-5"> The Server</a><ul class="nav nav-stacked"><li><a href="#sec-5-1">Node</a></li><li><a href="#sec-5-2">Package.json</a></li><li><a href="#sec-5-3">Socket.io</a></li><li><a href="#sec-5-4">server.js</a></li><li><a href="#sec-5-5">socket-client.js</a></li><li><a href="#sec-5-6">Functions</a></li><li><a href="#sec-5-7">Users</a></li><li><a href="#sec-5-8">The socket handler</a></li><li><a href="#sec-5-9">Chat</a></li><li><a href="#sec-5-10">The Image Command</a></li></ul></li><li><a href="#sec-6"> Express</a><ul class="nav nav-stacked"><li><a href="#sec-6-1">Express</a></li><li><a href="#sec-6-2">Express Server</a></li><li><a href="#sec-6-3">Error 404</a></li><li><a href="#sec-6-4">Giphy Route</a></li><li><a href="#sec-6-5">Giphy AJAX</a></li></ul></li><li><a href="#sec-7"> Databases</a><ul class="nav nav-stacked"><li><a href="#sec-7-1">Making information stick around</a></li><li><a href="#sec-7-2">Installing MongoDB</a></li><li><a href="#sec-7-3">Running MongoDB</a></li><li><a href="#sec-7-4">Why use a database? And why MongoDB?</a></li><li><a href="#sec-7-5">How MongoDB structures your data</a></li><li><a href="#sec-7-6">Integrating MongoDB into the web app</a></li><li><a href="#sec-7-7">You're done!</a></li><li><a href="#sec-7-8">Files</a></li></ul></li><li><a href="#sec-8">Thanks for being a part of Code Weekend!</a><ul class="nav nav-stacked"><li><a href="#sec-8-1">We hope you enjoyed these workshops as much as we enjoyed making them for you.</a></li></ul></li></ul>
+<li><a href="#sec-1">Code Weekend Spring 2k16</a><ul class="nav nav-stacked"><li><a href="#sec-1-1">Building your first webapp</a></li></ul></li><li><a href="#sec-2">Introduction to Web Development</a><ul class="nav nav-stacked"><li><a href="#sec-2-1">Web Pages and the basics of development</a></li><li><a href="#sec-2-2">An Introduction to (the) Life (of a Developer)</a></li><li><a href="#sec-2-3">An Introduction to the web</a></li><li><a href="#sec-2-4">What is Terminal&#47;Command Prompt?</a></li></ul></li><li><a href="#sec-3"> HTML&#47;CSS</a><ul class="nav nav-stacked"><li><a href="#sec-3-1">Simple HTML and CSS</a></li><li><a href="#sec-3-2">Umm, what about CSS?</a></li><li><a href="#sec-3-3">Let's take a look at what CSS looks like!</a></li><li><a href="#sec-3-4">Download</a></li></ul></li><li><a href="#sec-4"> Javascript</a><ul class="nav nav-stacked"><li><a href="#sec-4-1">Javscript, finally!</a></li><li><a href="#sec-4-2">In fact...</a></li><li><a href="#sec-4-3">JQuery</a></li><li><a href="#sec-4-4">Download</a></li></ul></li><li><a href="#sec-5"> The Server</a><ul class="nav nav-stacked"><li><a href="#sec-5-1">Node</a></li><li><a href="#sec-5-2">Package.json</a></li><li><a href="#sec-5-3">Socket.io</a></li><li><a href="#sec-5-4">server.js</a></li><li><a href="#sec-5-5">socket-client.js</a></li><li><a href="#sec-5-6">Functions</a></li><li><a href="#sec-5-7">Users</a></li><li><a href="#sec-5-8">The socket handler</a></li><li><a href="#sec-5-9">Chat</a></li><li><a href="#sec-5-10">The Image Command</a></li><li><a href="#sec-5-11">Download</a></li></ul></li><li><a href="#sec-6"> Express</a><ul class="nav nav-stacked"><li><a href="#sec-6-1">Express</a></li><li><a href="#sec-6-2">Express Server</a></li><li><a href="#sec-6-3">Error 404</a></li><li><a href="#sec-6-4">Giphy Route</a></li><li><a href="#sec-6-5">Giphy AJAX</a></li></ul></li><li><a href="#sec-7"> Databases</a><ul class="nav nav-stacked"><li><a href="#sec-7-1">Making information stick around</a></li><li><a href="#sec-7-2">Installing MongoDB</a></li><li><a href="#sec-7-3">Running MongoDB</a></li><li><a href="#sec-7-4">Why use a database? And why MongoDB?</a></li><li><a href="#sec-7-5">How MongoDB structures your data</a></li><li><a href="#sec-7-6">Integrating MongoDB into the web app</a></li><li><a href="#sec-7-7">You're done!</a></li><li><a href="#sec-7-8">Files</a></li></ul></li><li><a href="#sec-8">Thanks for being a part of Code Weekend!</a><ul class="nav nav-stacked"><li><a href="#sec-8-1">We hope you enjoyed these workshops as much as we enjoyed making them for you.</a></li></ul></li></ul>
 </nav>
     </div>
 

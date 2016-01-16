@@ -111,22 +111,25 @@ Now let's add a little more functionality to our chat app. First, we'll add a wa
     <h1>Code Weekend Sample Page</h1>
     <h2>Here's a smaller heading. We can go all the way down to H6</h2>
     <!-- Here's a comment that will not show up on the actual page -->
+
     <p>
       Here's a paragraph of text. You can fill in whatever you feel like in here and just end this tag to fininsh the paragraph.
     </p>
     <p>
         Let's continue building our chat app. We'll first add a textarea element to input text, and apply some CSS properties to make it look pretty!
     </p>
+
+
     <form>
-    <textarea placeholder="Write your message here..." required></textarea>
-    <button type="submit">Send Message</button>
+        <textarea placeholder="Write your message here..." required></textarea>
+        <button type="submit">Send Message</button>
     </form>
     <h3> Messages </h3>
     <p>
         Here's a list of all the messages so far:
     </p>
-      <ul>
-      </ul>
+    <ul>
+    </ul>
   </body>
 </html>
 ```
