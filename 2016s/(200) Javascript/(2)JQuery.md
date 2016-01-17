@@ -21,11 +21,11 @@ is not a required directory, but this is just for the program to look nice. Now
 you should have a file `client/js/jquery.js`.
 
 Once we have done this, we have to let the program know where JQuery is located.
-This is fairly easy, and can be done by adding something like '<script src=''
-></script>' however, inside of the single quotes, instead we are going to place
+This is fairly easy, and can be done by adding something like `<script src=''
+></script>` however, inside of the single quotes, instead we are going to place
 the location of our file. JQuery is a tool, or a script, and what the script tag
 does is it lets us know the location of these tools. In our case, the full line
-should look something like: '<script src="js/jquery.js"></script>'.
+should look something like: `<script src="js/jquery.js"></script>`.
 
 ## Now Lets Use It!!!
 
