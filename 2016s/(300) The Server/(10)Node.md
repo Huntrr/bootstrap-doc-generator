@@ -26,7 +26,7 @@ If instead of that command terminal got angry and said it doesn't know what
 `brew` is, it means you don't have Homebrew. No worried. Let's install Homebrew
 by typing this into terminal:
 
-`ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"`
+`ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
 
 If Homebrew installs successfully, try `brew install node` again. If that still
 doesn't work, try Googling the error text and looking for solutions. If that
