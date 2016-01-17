@@ -6,130 +6,68 @@ Add "mongodb": "~1.4.19" to the dependencies object inside the JSON so that it l
 
 ```json
 {
-"name": "codeweekend",
-"version": "0.0.0",
-"private": true,
-"dependencies": {
-"body-parser": "~1.6.6",
-"cookie-parser": "~1.3.3",
-"cookie-session": "~1.0.2",
-"express": "~4.8.6",
-"hjs": "~0.0.6",
-"mongodb": "~1.4.19",
-"request": "^2.42.0"
+  "name": "chat-server",
+  "private": true,
+  "version": "1.0.0",
+  "description": "A chat server built for Code Weekend Spring 2016",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.13.3",
+    "giphy-api": "^1.1.11",
+    "hjs": "0.0.6",
+    "mongodb": "^1.4.10",
+    "moniker": "^0.1.2",
+    "socket.io": "^1.3.7",
+    "underscore": "^1.8.3"
+  }
 }
-}
 ```
 
-Now let's go to `routes.js`. Just like any other module, we first need to require `mongodb`:
+Now let's go to `server.js`. Just like any other module, we first need to require `mongodb`. However, we will also have to point the program towards where all the information will be stored:
 
 ```javascript
-var mongo = require('mongodb');
+let mongo = require('mongodb').MongoClient;
+let uri = "mongodb://dinphil:dinph1l@ds054298.mongolab.com:54298/chatsrvr";
 ```
 
-Next, let's add the following code to open a connection to the database:
+Next, let's add the following code to open a connection to the database. This code should be inside of the connection block. This is because it should be the first thing that is done on connection.
 
 ```javascript
-var db;
-var MongoClient = mongo.MongoClient;
-var uri = "mongodb://localhost:27017/codeweekend";
-
-MongoClient.connect(uri, function(err, database) {
-if (err) {
-throw err;
-}
-
-db = database;
-});
+mongo.connect(uri, function (err, db) {
+  var collection = db.collection('chatmsgs')
+  collection.find().sort({ date : -1 }).limit(10).toArray((err, array) => {
+    if(err) return console.error(err);
+    for(let i = array.length - 1; i >= 0; i--) {
+      socket.emit('MESG', array[i]);
+    }
+  });
 ```
 
-The first thing we need to do is declare a variable for the database to be stored in (we'll see why in a minute). We also store the MongoClient object in a helper variable.
+Step by step what this block of code does.
 
-Next, we store the connection string in a variable. The connection string looks complicated, so let's break it down into parts. The beginning of any connection string for MongoDB is always "mongodb://". Next, you put the server name, a colon, and then the port number to connect to. In our case, since we're running the database on the same computer as the Node app, we can just use "localhost". The port number, 27017, is just the default port that `mongod` listens on; we didn't specify a different port when we ran `mongod` before, so that's where ours is listening. Finally, the string ends with a slash and then the name of the database to connect to. You can pick whatever name you'd like for the database; it's just a way of identifying which one you want to connect to in the case that you have multiple databases on your server. This also demonstrates one of the really nice features of MongoDB; if you specify a database that doesn't already exist, then it will create it for you.
+We connect to the database using the connection string we've defined. Notice that the function `connect` actually takes a callback rather than returning the database directly. This can useful in some cases, since it allows your app to do other things while waiting for the database to connect.
 
-Finally, we connect to the database using the connection string we've defined. Notice that the function `connect` actually takes a callback rather than returning the database directly. This can useful in some cases, since it allows your app to do other things while waiting for the database to connect. In our case, though, we just want to be able to use the database outside the callback, which is why we declared the `db` variable earlier.
+Within the connection, there are a few important things we note. First, we define a specific collection. A collection in a mongo database is like a file in any computer. In this case, we're going to name the file `chatmsgs`, and grab the information from there.
 
-In practice, you'll want to handle your errors more gracefully—meaning your app should do something other than just crash! For the purposes of this demo, though, it's simpler just to throw the error you get when trying to connect to the database. If your app crashes when you try to run it after adding this section, make sure that you have `mongod` running in an open terminal, and try again.
+Next thing that we do is actually find the ten most recent messages. This is done through the `collection.find()`. The sorting for recency is done through the `sort` function. These messages are placed in an array, and we then sort through the messages, and then display these messages through the  `socket.emit()` function. The `MESG` within this function is the function that displays the information.
 
-We also need to make a helper variable for the function `ObjectID`:
+Now, let's really get our hands messy and actually start adding the messages to the database. Inside of your MESG block add the following:
 
 ```javascript
-var ObjectID = mongo.ObjectID;
-```
-
-Now, let's really get our hands messy and change our existing code to make use of the powerful database we now have access to.
-
-```javascript
-router.get('/', function(req, res) {
-return res.render('index', {
-title: 'Codeweekend Notes',
-notes: req.session.notes
-});
+mongo.connect(uri, function (err, db) {
+    let collection = db.collection('chatmsgs');
+    collection.insert({
+      date: new Date().getTime(),
+      from: user.getName(),
+      message: data.message}, function(err, o) {
+          if (err) { console.warn(err.message); }
+          else { console.log("chat message inserted into db: " + message); }
+    });
 });
 ```
 
-We already know that this stores our notes in a session. However, now, let's make use of that database we've been talking about so much! With a little change in how we access and store the notes object, we can now route the entire process through our DB. We're going to make use of *queries* in the following sections, which are basically different ways of searching for data in a database. Naturally, each database allows you to create and use queries differently, and [this](http://www.tutorialspoint.com/mongodb/mongodb_query_document.htm) is how Mongo does some of the more popular ones.
+This is in the MESG block in order to capture all of the messages that are sent. Another step by step guide here:
 
-First, assuming we've stored all of the notes into a collection called `notes` inside of the `codeweekend` database, let's render all of the notes in the database for the route '/'.
+The database has to be connected to again. Once the connection is made again, we access the same exact collection as before. If we were to save to another collection, the database would not be able to pull the previous messages. In order for the information to be properly saved we need to provide a bit of information. First of all, we would need to know the time in order to pull the most recent messages. We will also need to know the user in order to know who the message came from. Of course, we will also need the message. All of this information is inserted with the `collection.insert`
 
-```javascript
-var ObjectID = require('mongodb').ObjectID;
-
-router.get('/', function(req, res) {
-db.collection('notes').find().toArray(function(err, notes) {
-return res.render('index', {
-title: 'Codeweekend Notes',
-notes: notes
-});
-});
-});
-```
-
-The ```find``` query returns all the documents in the collection, and the ```toArray``` method parses them all into an array, so that they can be rendered as before onto the page. It's important to note that ```find``` only returns all of the documents in the collection because we have not specified any search parameters - effectively marking all documents as acceptable for return. Neat!
-
-Next, let's return a specific document from the database, using the `_id` field in the document to identify it. Remember, this id is unique and only one document in the collection will match this query. See if you understand the code below.
-
-```javascript
-router.get('/:id', function(req, res) {
-db.collection('notes').findOne({ _id: ObjectID(req.params.id) }, function(err, note) {
-if (err || !note) {
-req.session.message = 'That note does not exist!';
-return res.redirect('/');
-}
-
-return.res.render('note', {
-note: note
-})
-});
-});
-```
-
-Before we do anything else, we'll briefly need to make a change in `index.hjs`. Before, we were using the `id` field for each note, but if you recall from before, MongoDB stores them in a field called `_id`. We'll need to change this in our links to be able to have them correctly send the user to the page for a given note. So let's change the section for the notes to the following:
-
-```html
-{{#notes}}
-<li><a href='/{{ _id }}'>{{ title }}</a></li>
-```
-
-Now that we can retrieve data from the database, let's also add new data to it! Let's go back to `routes.js` and change the final route. Using the `insert` method, we can quickly and easily add a new JSON document to the `notes` collection:
-
-```javascript
-router.post('/create', function(req, res) {
-if (!(req.body.title && req.body.body)) {
-req.session.message = 'You must provide a title and a body!';
-return res.redirect('/');
-}
-
-db.collection('notes').insert({
-title: req.body.title,
-body: req.body.body
-}, function(err, result) {
-req.session.message = 'Note created!';
-return res.redirect('/');
-});
-});
-
-module.exports = router;
-```
-
-Well, that wasn't so bad! In summary: every call to the database involves referencing our middleware `req.db` and using the collection (aka database) called 'notes'. We then use different functions like `findOne`, that finds one result, or `find().toArray` that gives us an array of all results in the databse. These functions also have callbacks that specify what to do in case there's an error, and if not, what to actually do with the result(s) we get. Who know switching storage stage could be that easy?
+Well, that wasn't so bad! 
